@@ -1,0 +1,996 @@
+//Common JavaScript functions for wellsfargoadvisors.com
+<!--
+// -----------------------------------------------------------------------------
+// Flash Detection Globals
+// Major version of Flash required
+var requiredMajorVersion = 8;
+// Minor version of Flash required
+var requiredMinorVersion = 0;
+// Minor version of Flash required
+var requiredRevision = 24;
+// -----------------------------------------------------------------------------
+// -->
+
+// Account for the wip and staging urls
+var wipstag = document.location.href.match(/\/(?:wip|staging)\w+x\/W\w+S\w+/);
+if(wipstag==null) wipstag='';
+
+var delim = '::';
+var fawpCookieName = 'FAWP';
+var globalCookieName = 'GLOBALCookie';
+var clientLoginCookieName = 'CLIENTLOGINCookie';
+var kickoutCookieName = 'KICKOUTCookie';
+var thisHost = document.location.protocol + '//' + document.location.host;
+var clientLoginURL = thisHost + wipstag + '/online-access/signon.htm';
+var kickoutPageURL = thisHost + wipstag + '/wfa/ipad/mobileapp.htm';
+var nonUSClientUrl = thisHost + wipstag + '/global/welcome.htm';
+//var howtoPage = document.location.href.match(/\/how\w+mos\/.*?$/);
+//var demoPage = document.location.href.match(/\/demo\/.*?$/);
+//var wfaPage = document.location.href.match(/\/wfa\/.*?$/);
+//var optSymbPage = document.location.href.match(/\/osi(trading){0,1}\/.*?$/);
+//var taxPage = document.location.href.match(/\/market-economy\/tax-center.*?$/);
+//var ebrokifrmPage = document.location.href.match(/\/financial-services\/account-services\/cash-sweep\/.*?$/);
+//var friendlyErrorPages = typeof(errorPageType) != 'undefined';
+
+// Sign up/on pages
+//var signOnPages = document.location.href.match(/\/(signup\/index|online\-access\/signon)\.htm$/);
+
+// Debt Ceiling Informational Pages
+//var debtCeilingVideoPage = document.location.href.match(/\/market-economy\/video\/current-conditions.*?/);
+//var debtCeilingPage = document.location.href.match(/\/market\-economy\/economic\-market\-reports\/debt\-ceiling\/debt\-ceiling\-2013\.htm$/);
+
+// Market-Economy outlook video page
+//var marketEconomyVideoOutlookPage = document.location.href.match(/\/market\-economy\/video\/outlook.htm.*?$/);
+
+// Determine whether or not we are to bypass the Global cookie check.
+//var bypassPage = (wfaPage!=null || howtoPage!=null || demoPage!=null || optSymbPage!=null || taxPage!=null || signOnPages!=null || debtCeilingVideoPage!=null || debtCeilingPage!=null || ebrokifrmPage!=null || marketEconomyVideoOutlookPage!=null || friendlyErrorPages);
+
+// Global flag to disable offers
+var offersAvailable=true;
+var unavailableURL=thisHost + wipstag + '/wfa/unavailable.htm';
+
+//Globals for Omniture A/B testing
+var impList = new Array();
+
+//Global for Omniture video tracking
+var v51 = '';
+
+//addLoadEvent(showInfo);
+
+function getobject(obj){
+	if (document.getElementById)
+		return document.getElementById(obj)
+	else if (document.all)
+		return document.all[obj]
+}
+
+// Get the value of a key-value pair from the query string
+function getQSVar(v) {
+  var query = window.location.search.substring(1);
+  var rtn = '';
+  var vars = query.split("&");
+  for (var i=0;i<vars.length;i++) {
+    var pair = vars[i].split("=");
+    if (pair[0] == v) {
+      rtn = unescape(pair[1]);
+    }
+  }
+  return rtn;
+}
+
+function addLoadEvent(func) {
+    var oldonload = window.onload;
+    if (typeof window.onload != 'function') {
+        window.onload = func;
+    }
+    else {
+        window.onload = function() {
+            oldonload();
+            func();
+        }
+    }
+}
+function popWin(url){
+	var newWin = null;
+	var sw=screen.availWidth;
+	var sh=screen.availHeight;
+	var browserName = navigator.appName;
+	var params='scrollbars=yes,toolbar=yes,directories=yes,menubar=yes,location=yes,resizable=yes,status=yes,';
+	var W=700;
+	var H=400;
+	var returnHandle = false;
+	// Optional arguments: height,width,options
+	if (popWin.arguments.length > 1) {
+		if(popWin.arguments.length>=2){H=popWin.arguments[1];}
+		if(popWin.arguments.length>=3){W=popWin.arguments[2];}
+		if(popWin.arguments.length>=4){params=popWin.arguments[3];}
+		if(params.substring(params.length-1,params.length-1)!=','){params+=',';}
+		if(popWin.arguments.length>=5){returnHandle=popWin.arguments[4];}
+	}
+	else {
+		if (browserName=="Netscape"){
+			W=690;
+			H=410;
+		}
+	}
+	params+='width='+W+',height='+H;
+	var l=(sw-W-10)*0.5;
+	var t=(sh-H-30)*0.5;
+	params+=',left='+l+',top='+t;
+	newWin = window.open(url,"wsWin",params);
+	newWin.focus();
+	if(returnHandle)
+    	return newWin;
+    else
+        return;
+}
+
+function popupWin(url){
+	var popupOptions = ',toolbar=no,menubar=no';
+	var browserName = navigator.appName;
+	// Optionally pass a second argument to control the display
+	// of the toobar and menubar
+	if (popupWin.arguments.length > 1) {
+		popupOptions = popupWin.arguments[1];
+	}
+	var W=700;
+	var H=400;
+	if (browserName=="Netscape"){
+		W=690;
+		H=410;
+	}
+	popWin(url,H,W,'scrollbars=yes,directories=no,location=no,resizable=yes,status=no,'+popupOptions);
+}
+
+  function getAdobe(){
+    document.writeln('<a href="javascript:popupWin(\'http://www.adobe.com/products/acrobat/readstep2.html\', \',toolbar=yes,menubar=yes\');">Adobe&reg; Reader&reg;</a> is required to view our PDF documents.');
+}
+function b64DecodeUnicode(str) {
+  return decodeURIComponent(
+    atob(str)
+      .split('')
+      .map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      })
+      .join('')
+  );
+}
+
+function isBase64(str) {
+  try {
+    return btoa(atob(str)) == str;
+  } catch (err) {
+    return false;
+  }
+}
+
+function getCookie(name) {
+    var start = document.cookie.lastIndexOf(name+"=");
+    var len = start+name.length+1;
+    if ((!start) && (name != document.cookie.substring(0,name.length))) return null;
+    if (start == -1) return null;
+    var end = document.cookie.indexOf(";",len);
+    if (end == -1) end = document.cookie.length;
+    return unescape(document.cookie.substring(len,end));
+}
+
+function setCookie(name,value,maxage,expires,path,domain,secure) {
+    var dt = (expires) ? new Date(expires) : "";
+    document.cookie = name + "=" +escape(value) +
+        ( (maxage) ? ";max-age=" + maxage: "") +
+        ( (dt) ? ";expires=" + dt.toGMTString() : "") +
+        ( (path) ? ";path=" + path : "") +
+        ( (domain) ? ";domain=" + domain : "") +
+        ( (secure) ? ";secure" : "");
+}
+
+function delCookie(name) {
+     document.cookie = name + "=; expires=Thu, 01-Jan-70 00:00:01 GMT" +  "; path=/";
+}
+
+var FAWPcookie;
+isBase64(getCookie(fawpCookieName))
+  ? (FAWPcookie = unescape(b64DecodeUnicode(getCookie(fawpCookieName))))
+  : (FAWPcookie = getCookie(fawpCookieName));
+var FAWPFAname = '';
+var FAWPgroupName = '';
+var FAWPbranchName = '';
+var FAWPbranchAddress1 = '';
+var FAWPbranchAddress2 = '';
+var FAWPbranchAddress3 = '';
+var FAWPbranchCity = '';
+var FAWPbranchState = '';
+var FAWPbranchZip = '';
+var FAWPemailAddress = '';
+var FAWPbranchCode = '';
+var FAWPsubfirm = '';
+var FAWPurl = '';
+var FAWPphone = '';
+var FAWPtollFree = '';
+var FAWPfax = '';
+
+if(FAWPcookie != null) {
+
+	var cookieArr = FAWPcookie.split(delim);
+        FAWPFAname = unescape(cookieArr[0]);
+        FAWPgroupName = unescape(cookieArr[1]);
+        FAWPbranchName = unescape(cookieArr[2]);
+        FAWPbranchAddress1 = unescape(cookieArr[3]);
+        FAWPbranchAddress2 = unescape(cookieArr[4]);
+        FAWPbranchAddress3 = unescape(cookieArr[5]);
+        FAWPbranchCity = unescape(cookieArr[6]);
+        FAWPbranchState = unescape(cookieArr[7]);
+        FAWPbranchZip = unescape(cookieArr[8]);
+        FAWPemailAddress = unescape(cookieArr[9]);
+        FAWPbranchCode = unescape(cookieArr[10]);
+        FAWPsubfirm = unescape(cookieArr[11]);
+        FAWPurl = unescape(cookieArr[12]);
+        FAWPphone = unescape(cookieArr[13]);
+        FAWPtollFree = unescape(cookieArr[14]);
+        FAWPfax = unescape(cookieArr[15]);
+}
+
+
+
+function backToFawp() {
+    if(FAWPcookie != null) {
+
+
+        //var linktext = (FAWPFAname.length > 0) ? FAWPFAname + '\'s' : ((FAWPgroupName.length > 0) ? 'Our Team\'s' : 'the ' + FAWPbranchName);
+        endsInS = /s$/i;
+        var linktext = (FAWPFAname.length > 0) ? ((FAWPFAname.match(endsInS)) ? FAWPFAname + '\'' : FAWPFAname + '\'s') : ((FAWPgroupName.length > 0) ? 'Our Team\'s' : 'the ' + FAWPbranchName);
+        linktext = linktext.replace(/\+/g,' ');
+        var rtn = '';
+        if(FAWPurl.length > 0) {
+            rtn = '<a href="' + FAWPurl + '">Return to ' + linktext + ' Page</a> | '
+        }
+        document.write(rtn);
+    }
+}
+
+// Remove the Global cookie if it exists
+var GLOBALcookie = getCookie(globalCookieName);
+if(GLOBALcookie != null) {
+  delCookie(globalCookieName);
+}
+
+// if(!bypassPage) {
+    // var GLOBALcookie = getCookie(globalCookieName);
+    // if(typeof(domesticURLs) != 'undefined') {
+        // var url = document.location.href;
+        // var fldrName = url.match(/\/([0-9a-zA-Z\-\_]+)\/?(?:index.htm)?$/)[1];
+
+        // var redirURL = '';
+        // if(GLOBALcookie == null)
+            // redirURL = domesticURLs[fldrName];
+        // else
+            // redirURL = nonUSURLs[fldrName];
+
+        // if(typeof(redirURL) != 'undefined')
+            // window.location.replace(wipstag+redirURL);
+    // }
+    // else {
+        // if(GLOBALcookie != null) {
+            // // Send the user to Non-US site
+            // document.location.replace(nonUSClientUrl);
+        // }
+    // }
+// }
+
+function offerTrafficRouter(offer,cid,intcid,qs) {
+
+	var fullHost = document.location.host;
+	var parts = fullHost.split('.');
+	var subdmn = parts[0];
+	var rsvpURL = '';
+
+	if (subdmn == "wwwcte") {
+		rsvpURL = "http://info-test.wellsfargoadvisors.com/";
+	} else {
+		rsvpURL = "https://info.wellsfargoadvisors.com/";
+	}
+
+	//all offers are required to have cid, some might have intcid
+	if (intcid != null) {
+		cidString = "&cid=" + cid + "&intcid="+intcid;
+	} else {
+		cidString = "&cid=" + cid;
+	}
+
+
+	var offerFormUrl = new Array();
+	offerFormUrl["401k-rollover"] = rsvpURL + "form.aspx?type=401k-rollover" + cidString;
+	offerFormUrl["401k"] = rsvpURL + "form.aspx?type=401k-ira" + cidString;
+	offerFormUrl["brand"] = rsvpURL + "form.aspx?type=wellsfargoadvisorspacket" + cidString;
+	offerFormUrl["bullmarket"] = rsvpURL + "form.aspx?type=bullmarket" + cidString;
+	offerFormUrl["control"] = rsvpURL + "form.aspx?type=control" + cidString;
+	offerFormUrl["estate"] = rsvpURL + "form.aspx?type=estate" + cidString;
+	offerFormUrl["estate-steps"] = rsvpURL + "form.aspx?type=estate-steps" + cidString;
+	offerFormUrl["familytalk"] = rsvpURL + "form.aspx?type=family-talk-guide" + cidString;
+	offerFormUrl["loss"] = rsvpURL + "form.aspx?type=loss" + cidString;
+	offerFormUrl["outlook"] = rsvpURL + "form.aspx?type=outlook" + cidString;
+	offerFormUrl["college"] = rsvpURL + "form.aspx?type=college-savings" + cidString;
+	offerFormUrl["stand"] = rsvpURL + "form.aspx?type=wfa-envision-stand" + cidString;
+        offerFormUrl["midyear"] = rsvpURL + "form.aspx?type=midyear" + cidString;
+	offerFormUrl["income"] = rsvpURL + "form.aspx?type=income" + cidString;
+	offerFormUrl["asset-allocation"] = rsvpURL + "form.aspx?type=asset-allocation" + cidString;
+	offerFormUrl["stay-invested"] = rsvpURL + "form.aspx?type=stay-invested" + cidString;
+        offerFormUrl["caseforamerica"] = rsvpURL + "form.aspx?type=caseforamerica" + cidString;
+	offerFormUrl["income-strategy"] = rsvpURL + "form.aspx?type=income-strategy" + cidString;
+	offerFormUrl["tax-strategies"] = rsvpURL + "form.aspx?type=tax-strategies" + cidString;
+	offerFormUrl["tax"] = rsvpURL + "form.aspx?type=tax" + cidString;
+	offerFormUrl["five-years-after"] = rsvpURL + "form.aspx?type=five-years-after" + cidString;
+	offerFormUrl["getting-retirement-right"] = rsvpURL + "form.aspx?type=getting-retirement-right" + cidString;
+	offerFormUrl["rebalancing"] = rsvpURL + "form.aspx?type=rebalancing" + cidString;
+	offerFormUrl["requestcall"] = rsvpURL + "form.aspx?type=request-call" + cidString;
+	offerFormUrl["divorce"] = rsvpURL + "form.aspx?type=divorce" + cidString;
+	offerFormUrl["wfapacket2"] = rsvpURL + "form.aspx?type=wellsfargoadvisorspacket2" + cidString;
+	offerFormUrl["why-bonds"] = rsvpURL + "form.aspx?type=why-bonds" + cidString;
+        offerFormUrl["10things"] = rsvpURL + "form.aspx?type=10things" + cidString;
+	offerFormUrl["8tax-ideas"] = rsvpURL + "form.aspx?type=8tax-ideas" + cidString;
+        offerFormUrl["diversification"] = rsvpURL + "form.aspx?type=diversification" + cidString;
+	offerFormUrl["4steps"] = rsvpURL + "form.aspx?type=4steps" + cidString;
+	offerFormUrl["volatility"] = rsvpURL + "form.aspx?type=volatility" + cidString;
+	offerFormUrl["callrequest"] = rsvpURL + "callrequest.aspx?" + cidString.substr(1);
+	offerFormUrl["rising-interest-rates"] = rsvpURL + "form.aspx?type=rising-interest-rates" + cidString;
+	offerFormUrl["estate2"] = rsvpURL + "form.aspx?type=estate2" + cidString;
+
+
+
+
+	if (FAWPcookie != null) {  //if the FAWP cookie exists, the append qs name/value pairs for FA block
+
+		FAWPurl = FAWPurl.replace(/http:\/\/|https:\/\//, '');
+		offerFormUrl[offer] = offerFormUrl[offer] + '&email='+ FAWPemailAddress + '&url=' + FAWPurl;
+
+	}
+
+	/*var offerPostForm=document.createElement('form');
+	offerPostForm.id="offerPost";
+	offerPostForm.method="post";
+	offerPostForm.action=offerFormUrl[offer];
+
+	var prevPageInput=document.createElement('input');
+	prevPageInput.type="hidden";
+	prevPageInput.name="prevPageName";
+	prevPageInput.value=s.eVar16;
+	offerPostForm.appendChild(prevPageInput);
+
+	var submitInput=document.createElement('input');
+	submitInput.type="submit";
+	offerPostForm.appendChild(submitInput);
+
+	document.getElementById("mainBody").appendChild(offerPostForm);
+	offerPostForm.submit();*/
+
+
+	document.location.href = offerFormUrl[offer];
+
+
+}
+
+
+
+//print FA contact info on offer page
+function printFAInfo() {
+
+
+	var whichName = (FAWPFAname.length > 0) ? FAWPFAname : ((FAWPgroupName.length > 0) ? FAWPgroupName : FAWPbranchName);
+
+	document.write('<p>');
+    	document.write('<div><strong>'+whichName+'</strong></div>');
+	document.write('<div>Phone: '+FAWPphone+' | '+FAWPtollFree+'</div>');
+	document.write('</p>');
+
+}
+
+function gotoOffer(url) {
+    if(offersAvailable) {
+        document.location.replace(url);
+    }
+    else {
+        document.location.replace(unavailableURL);
+    }
+}
+
+/* function copyright (startingYear) { **** Repurpose this later as js ****
+	var cr = '';
+	if (startingYear != null) {
+		cr = "&copy; " + startingYear + "-" + new Date().getFullYear();
+	} else {
+		cr = "&copy; 2009-" + new Date().getFullYear();
+	}
+	$('#copyright').html(cr);
+} */
+
+//Omniture engagement scores
+var engScore = 0;
+var engScores = {
+	'paid search' : '+3',
+	'display ad' : '+3',
+	'seo branded' : '+5',
+	'seo unbranded' : '+5',
+	'affiliated sites' : '+8',
+	'social networks' : '+8',
+	'page view' : '+1',
+	'bonus contact us' : '+7',
+	'bonus services' : '+20',
+	'bonus envision' : '+20',
+	'bonus fawp' : '+12',
+	'download' : '+5',
+	'podcast' : '+5',
+	'video view' : '+5',
+	'visit num' : '8',
+	'form view' : '+3',
+	'thank you' : '+8',
+	'rac thank you' : '+47',
+	'locator search' : '+13'
+
+}
+
+// This is temporary code used to swap offer images easily.
+// **** Ad Cooker ****
+
+/* $(document).ready(function() {
+	adCookerLaunch(); //Used to swap offers dynamically. Will not be needed in Tridion.
+});
+
+function adCookerLaunch() {
+	if (typeof adItem !== "undefined") {
+		adCreateCookie("adCook", adItem, 30);
+	}
+	if (typeof adDisp !== "undefined") {
+		// Do nothing
+	} else {
+		if ( adReadCookie("adCook") != null ) {
+			swapAd( adReadCookie("adCook") );
+		}
+	}
+}
+
+function adCreateCookie(name,value,days) {
+    if (days) {
+        var date = new Date();
+        date.setTime(date.getTime()+(days*24*60*60*1000));
+        var expires = "; expires="+date.toGMTString();
+    }
+    else var expires = "";
+    document.cookie = name+"="+value+expires+"; path=/";
+}
+
+function adReadCookie(name) {
+    var nameEQ = name + "=";
+    var ca = document.cookie.split(';');
+    for(var i=0;i < ca.length;i++) {
+        var c = ca[i];
+        while (c.charAt(0)==' ') c = c.substring(1,c.length);
+        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+    }
+    return null;
+}
+
+function adEraseCookie(name) {
+    adCreateCookie(name,"",-1);
+}
+
+function swapAd(cookie) {
+	var html = null;
+	switch ( cookie ) {
+		case "clear" :
+			adEraseCookie("adCook");
+			break;
+		case "report" :
+			html = "<a href='https://info.wellsfargoadvisors.com/form.aspx?type=college-savings&cid=WFA110032555&intcid=WFA110032555' target='_blank'><img alt='College costs are on the rise. Learn how to start saving for the soaring costs of college. Get more information' border='0' height='245' src='/images/offers/education_funding.gif' width='215'></a>"
+			break;
+	}
+	if ( html != null ) {
+		$( "right_column > p" ).html(html);
+	}
+} */
+// **** End Ad Cooker ****
+
+/* **** Old ****
+function loadStyleSheet(src){
+    if (document.createStyleSheet) document.createStyleSheet(src);
+        else {
+            var stylesheet = document.createElement('link');
+			stylesheet.href = src;
+            stylesheet.rel = 'stylesheet';
+            stylesheet.type = 'text/css';
+            document.getElementsByTagName('head')[0].appendChild(stylesheet);
+        }
+}*/
+
+function loadResource(resource, src) {
+	var type = "";
+	switch (resource) {
+		case "text/css" :
+			var item = document.createElement("link");
+			item.href = src;
+			item.rel = "stylesheet";
+			item.type = resource;
+			break;
+		case "text/javascript" :
+			var item = document.createElement("script");
+			item.src = src;
+			item.type = resource;
+	}
+	document.getElementsByTagName("head")[0].appendChild(item);
+}
+
+//For Data Layer Fixes - Only needed for documentum version. Should all be dynamic with Tridion.
+// (function () {
+
+// 	var section = digitalData.page.pageInfo.pageName.split(":");
+// 	if (section.length == 3) {
+// 		digitalData.page.category.primarySection = section[section.length - 1];
+// 	} else if (section.length > 4 ) {
+// 		// Do nothing
+// 	} else {
+// 		digitalData.page.category.subSection1 = section[section.length - 1];
+// 	}
+
+/* switch (digitalData.page.pageInfo.pageName) {
+	case "wfa:public:why-wells-fargo" :
+		digitalData.page.category.primarySection = "why-wells-fargo"
+		break;
+	case "wfa:public:services" :
+		digitalData.page.category.primarySection = "services"
+		break;
+	case "wfa:public:planning" :
+		digitalData.page.category.primarySection = "planning"
+		break;
+	case "wfa:public:research-analysis" :
+		digitalData.page.category.primarySection = "research-analysis"
+		break;
+	case "wfa:public:tax-center" :
+		digitalData.page.category.primarySection = "tax-center"
+		break;
+	case "wfa:public:about" :
+		digitalData.page.category.primarySection = "about"
+		break;
+	case "wfa:public:why-wells-fargo:financial-advisor" :
+		digitalData.page.category.subSection1 = "financial-advisor"
+		break;
+	case "wfa:public:why-wells-fargo:advisors-company" :
+		digitalData.page.category.subSection1 = "advisors-company"
+		break;
+	case "wfa:public:why-wells-fargo:our-process" :
+		digitalData.page.category.subSection1 = "our-process"
+		break;
+	case "wfa:public:why-wells-fargo:products-services" :
+		digitalData.page.category.subSection1 = "products-services"
+		break;
+	case "wfa:public:services:financial-advisor" :
+		digitalData.page.category.subSection1 = "financial-advisor"
+		break;
+	case "wfa:public:services:phone" :
+		digitalData.page.category.subSection1 = "phone"
+		break;
+	case "wfa:public:services:online" :
+		digitalData.page.category.subSection1 = "online"
+		break;
+	case "wfa:public:planning:life-events" :
+		digitalData.page.category.subSection1 = "life-events"
+		break;
+	case "wfa:public:planning:goals" :
+		digitalData.page.category.subSection1 = "goals"
+		break;
+	case "wfa:public:research-analysis:commentary" :
+		digitalData.page.category.subSection1 = "commentary"
+		break;
+	case "wfa:public:research-analysis:strategy" :
+		digitalData.page.category.subSection1 = "strategy"
+		break;
+	case "wfa:public:research-analysis:reports" :
+		digitalData.page.category.subSection1 = "reports"
+		break;
+	case "wfa:public:research-analysis:our-strategists" :
+		digitalData.page.category.subSection1 = "our-strategists"
+		break;
+	case "wfa:public:tax-center:cost-basis" :
+		digitalData.page.category.subSection1 = "cost-basis"
+		break;
+	case "wfa:public:about:firm" :
+		digitalData.page.category.subSection1 = "firm"
+		break;
+	case "wfa:public:about:leadership" :
+		digitalData.page.category.subSection1 = "leadership"
+		break;
+	case "wfa:public:about:press-releases" :
+		digitalData.page.category.subSection1 = "press-releases"
+		break;
+} */
+
+// digitalData.page.Codeversion = "3.5v";
+// digitalData.page.server = "wfa";
+
+// }());
+
+var classSwap = {
+    "add" : function( classname, element ) {
+        var cn = element.className;
+    	//test for existance
+    	if( cn.indexOf( classname ) != -1 ) {
+    		return;
+    	}
+    	//add a space if the element already has class
+    	if( cn != '' ) {
+    		classname = ' '+classname;
+    	}
+    	element.className = cn+classname;
+		},
+    "remove" : function (classname, element ) {
+        var cn = element.className;
+    	var rxp = new RegExp( "\\s?\\b"+classname+"\\b", "g" );
+    	cn = cn.replace( rxp, '' );
+    	element.className = cn;
+	}
+}
+
+document.onreadystatechange = function() {
+
+	if (document.readyState == "interactive") {
+
+		var irtBuf = '';
+		var faBuf = '';
+		if(typeof(pfWin)=='undefined') {
+			var pfWin = false;
+		}
+
+		if ((typeof(link)!='undefined') && ((link == "emx") || (link == "client"))){
+			// don't display contact us
+		} else if(FAWPcookie != null && (document.getElementById("conFA"))) {
+			if(!pfWin) {
+				document.getElementById("conFA").innerHTML = buildFA();
+			}
+		}
+
+		if ( document.getElementsByClassName("offerBlock").length === 1 ) {
+			offerSwap();
+		}
+
+	}
+}
+
+/*function buildIRT() {
+    var rac = "javascript:offerTrafficRouter('requestcall','WFA110032878')";
+    irtBuf = '<div class="promoBox">';
+    irtBuf += '<h3 class="h-promoHeading">Get in Touch With Us</h3>';
+    irtBuf += '<p>For more information, contact your Financial Advisor.</p>';
+    irtBuf += '<p>Don\'t have an advisor or an account?<br />Call: <a href="tel:+18662245708">1-866-224-5708</a> or</p>';
+    irtBuf += '<a class="buttonPrimary marginTop marginBottom" href="'+ rac +'">Request a Call</a>';
+    irtBuf += '</div>';
+}*/
+function clearReload(e){
+	e.preventDefault();
+	e.stopPropagation();
+	document.cookie="FAWP=;domain=.wellsfargoadvisors.com;path=/;expires=Thu, 01 Jan 1970 00:00:01 GMT";
+	//delCookie('FAWP');
+	window.location.reload();
+}
+
+
+function buildFA() {
+    //var headerText = (FAWPFAname.length > 0) ? 'Contact Me' : ((FAWPgroupName.length > 0) ? 'Contact Us' : 'Contact Us');
+    var homePageLinkText = (FAWPFAname.length > 0) ? 'My Home Page' : ((FAWPgroupName.length > 0) ? 'Our Home Page' : 'Our Home Page');
+    var whichName = (FAWPFAname.length > 0) ? FAWPFAname : ((FAWPgroupName.length > 0) ? FAWPgroupName : FAWPbranchName);
+	if (FAWPurl.indexOf("http://") != -1) {
+		FAWPurl = FAWPurl.substr(7);
+	} else if (FAWPurl.indexOf("https://") != -1) {
+		FAWPurl = FAWPurl.substr(8);
+	}
+    var qs = '?email='+ FAWPemailAddress +'&url='+ FAWPurl + '&cid=WFA110032878';
+
+    var faBuf ='<span class="highlightText" style="display:inline-block">Last Viewed Advisor&nbsp</span><a href="#" class="inlineLink" style="font-size: .875em; padding-left: 4px;" id="reloadLink">Clear</a>';
+    faBuf +='<h4><a href="https://'+FAWPurl+'">'+whichName.toTitleCase()+' <span aria-hidden="true">&#x276f;</span></a></h4>';
+
+		//var toolTip = '<div aria-describedby="tooltipTrigger" class="tooltip" id="tooltipPanel" role="tooltip"><button class="close" id="close"><svg aria-labeledby="title" class="icon close" focusable="true" height="1.5em" role="img" tabindex="0" viewBox="0 0 15 15" width="1.5em"><use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#icon-close"></use></svg></button><img alt="" class="tooltipArrow" src="/images/mvp/sitewide/tooltipArrow.svg"><p style=" color: #44464a;">This is your last viewed contact. Click on <a href="https://www.wellsfargo.com/locator/wellsfargoadvisors" class= "inlineLink">Find an Advisor</a> to change this.</p></div>';
+
+    faBuf +='<div>'+FAWPbranchAddress1.toTitleCase()+'</div>';
+    if(FAWPbranchAddress2.length > 0) {
+        faBuf +='<div>'+FAWPbranchAddress2.toTitleCase()+'</div>';
+    }
+    if(FAWPbranchAddress3.length > 0) {
+        faBuf +='<div>'+FAWPbranchAddress3.toTitleCase()+'</div>';
+    }
+    faBuf +='<div>'+FAWPbranchCity.toTitleCase()+', '+FAWPbranchState.toUpperCase()+' '+FAWPbranchZip+'</div>';
+    faBuf +='<div><a href="tel:+1'+FAWPphone+'">1-'+FAWPphone+'</a></div>';
+		//faBuf += toolTip;
+    //faBuf +='<div><a class="buttonPrimary marginTop marginBottom" href="javascript:offerTrafficRouter(\'callrequest\',\'\',\'\',\''+ qs +'\');">Request a Call</a></div>';
+	//Removed the offerTrafficRouter stuff as a temp fix for the link.
+	var fullHost = document.location.host;
+	var parts = fullHost.split(".");
+	var subdmn = parts[0];
+	var rsvpURL = "";
+	if (subdmn == "wwwcte") {
+		rsvpURL = "http://info-test.wellsfargoadvisors.com/";
+	} else {
+		rsvpURL = "https://info.wellsfargoadvisors.com/";
+	}
+	faBuf +='<div><a class="buttonPrimary marginTop marginBottom" href="' + rsvpURL + 'callrequest.aspx' + qs + '">Request a Call</a></div>';
+	return faBuf;
+}
+
+if (document.getElementById('reloadLink')) {
+	document.getElementById('reloadLink').addEventListener('click', clearReload, false);
+}
+
+/*function showPanel(fieldName) {
+  var fieldNameElement = document.getElementById("field_name");
+  while(fieldNameElement.childNodes.length >= 1) {
+    fieldNameElement.removeChild(fieldNameElement.firstChild);
+  }
+  fieldNameElement.appendChild(fieldNameElement.ownerDocument.createTextNode(fieldName));
+}*/
+
+function removeContent(field) {
+	var fieldElement = document.getElementById(field);
+	while(fieldElement.childNodes.length >= 1) {
+		fieldElement.removeChild(fieldElement.firstChild);
+	}
+}
+
+String.prototype.toTitleCase = function() {
+  var i, j, str, lowers, uppers;
+  str = this.replace(/([^\W_]+[^\s-]*) */g, function(txt) {
+    return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+  });
+
+  // Certain minor words should be left lowercase unless
+  // they are the first or last words in the string
+  lowers = ['A', 'An', 'The', 'And', 'But', 'Or', 'For', 'Nor', 'As', 'At',
+  'By', 'For', 'From', 'In', 'Into', 'Near', 'Of', 'On', 'Onto', 'To', 'With'];
+  for (i = 0, j = lowers.length; i < j; i++)
+    str = str.replace(new RegExp('\\s' + lowers[i] + '\\s', 'g'),
+      function(txt) {
+        return txt.toLowerCase();
+      });
+
+  // Certain words such as initialisms or acronyms should be left uppercase
+  uppers = ['Id', 'Tv'];
+  for (i = 0, j = uppers.length; i < j; i++)
+    str = str.replace(new RegExp('\\b' + uppers[i] + '\\b', 'g'),
+      uppers[i].toUpperCase());
+
+  return str;
+}
+
+function getRandom(min, max) {
+    return Math.floor(Math.random() * (max - min)) + min;
+}
+
+var customOffers = [
+	{
+		"titleDTM" : "IRAContributionTool",
+		"cssTitle" : "IRAContributionToolOffer",
+		"highlight" : "Learn More",
+		"image" : "/images/mvp/offers/ira-contribution-bottomoffer-banner.jpg",
+		"imageHigh" : "/images/mvp/offers/ira-contribution-bottomoffer-banner@2x.jpg",
+		"color" : "#696B63",
+		"heading" : "Open or contribute to an IRA",
+		"body" : "Use our IRA contribution tool to determine your eligibility.",
+		"href" : "/planning/ira-contribution-calculator/",
+		"router" : "no",
+		"cid" : "0",
+		"intcid" : "0"
+	},
+	{
+		"titleDTM" : "newtaxlaw",
+		"cssTitle" : "newtaxlawOffer",
+		"highlight" : "Learn More",
+		"image" : "/images/mvp/offers/tax-law-bottom-offer.jpg",
+		"imageHigh" : "/images/mvp/offers/tax-law-bottom-offer@2x.jpg",
+		"color" : "#507f70",
+		"heading" : "The New Tax Law",
+		"body" : "Tax-planning strategies, plus analysis from Wells Fargo Investment Institute on what the new law may mean for investors.",
+		"href" : "/research-analysis/reports/new-tax-law.htm",
+		"router" : "no",
+		"cid" : "0",
+		"intcid" : "0"
+	},
+	{
+		"titleDTM" : "retirement",
+		"cssTitle" : "retirementOffer",
+		"highlight" : "Get the Free Report",
+		"image" : "/images/mvp/offers/retirement-bottom-offer.jpg",
+		"imageHigh" : "/images/mvp/offers/retirement-bottom-offer@2x.jpg",
+		"color" : "#A9431E",
+		"heading" : "Retiring in the Next 5 Years?",
+		"body" : "Find out what you can do now to affect your retirement lifestyle.",
+		"href" : "https://info.wellsfargoadvisors.com/form.aspx?type=getting-retirement-right&cid=WFA1600035589&intcid=WFA1600035589",
+		"router" : "no",
+		"cid" : "0",
+		"intcid" : "0"
+	}
+];
+var targetOffer = [
+	{
+		"titleDTM" : "retirement",
+		"cssTitle" : "retirementOffer",
+		"highlight" : "Get the Free Report",
+		"image" : "/images/mvp/offers/retirementOffer.jpg",
+		"imageHigh" : "/images/mvp/offers/retirementOffer2x.jpg",
+		"color" : "#A9431E",
+		"heading" : "Retiring in the Next 5 Years?",
+		"body" : "Find out what you can do now to affect your retirement lifestyle.",
+		"href" : "https://info.wellsfargoadvisors.com/form.aspx?type=getting-retirement-right",
+		"router" : "getting-retirement-right",
+		"cid" : "WFA140043934",
+		"intcid" : "0"
+	}
+]
+
+//This is repetitious, only to get functionality for targeted banners
+function offerTarget(){
+		//Bottom Offer
+	var coreImg = targetOffer[0].image;
+	if (window.matchMedia) {
+		var mq = window.matchMedia("only screen and (min--moz-device-pixel-ratio: 2), only screen and (-o-min-device-pixel-ratio: 4/2), only screen and (-webkit-min-device-pixel-ratio: 2), only screen  and (min-device-pixel-ratio: 2), only screen and (min-resolution: 2dppx)");
+		if (mq.matches) {
+			coreImg = targetOffer[0].imageHigh;
+		}
+	}
+	var container = document.getElementsByClassName("offerBlock");
+	container[0].innerHTML = "";
+	var imgContainer = document.createElement("div");
+	imgContainer.className = "offerImg " + targetOffer[0].cssTitle;
+	imgContainer.setAttribute("style", "background-image: url('" + coreImg + "')");
+	container[0].appendChild(imgContainer);
+	var txtContainer = document.createElement("div");
+	txtContainer.className = "ctaBlock";
+	txtContainer.setAttribute("style", "background-color:" + targetOffer[0].color);
+	var bottomHead = document.createElement("h3");
+	bottomHead.className = "h-promoHeading";
+	bottomHead.appendChild(document.createTextNode(targetOffer[0].heading));
+	txtContainer.appendChild(bottomHead);
+	var bottomBody = document.createElement("p");
+	bottomBody.appendChild(document.createTextNode(targetOffer[0].body));
+	txtContainer.appendChild(bottomBody);
+	var bottomLink = document.createElement("a");
+	bottomLink.className = "buttonSecondary";
+	bottomLink.href = targetOffer[0].href;
+	bottomLink.setAttribute("onclick", offerRouterPath(targetOffer,0));
+	bottomLink.appendChild(document.createTextNode(targetOffer[0].highlight));
+	txtContainer.appendChild(bottomLink);
+	container[0].appendChild(txtContainer);
+
+	//Analytics
+	var offerDTM = ""
+	if (digitalData.page.pageInfo.pageName == "wfa:public:mvpHome" || digitalData.page.pageInfo.pageName == "wfa:public:homepage") {
+		offerDTM = "wfa:public:homepage|"
+	}
+	// For the following, had to change titleDTM to heading due to Adobe changes in system.
+	digitalData.page.internalpromotions = {
+		"promolist" : offerDTM + targetOffer.heading + "|os1>" + offerDTM + targetOffer.heading + "|os2"
+	}
+}
+
+function offerRouterPath(list, pos) { // Feeds the values for OfferTrafficRouter for offer onclick events
+	var onClickEvent = "promoClick('" + list[pos].heading + "');";
+	if ( list[pos].router != "no" ) {
+			onClickEvent = onClickEvent + "offerTrafficRouter('" + list[pos].router + "','" + list[pos].cid;
+			if ( list[pos].intcid != "0" ) {
+				onClickEvent = onClickEvent + "','" + list[pos].intcid;
+			}
+			onClickEvent = onClickEvent + "');return false;";
+	}
+	return onClickEvent;
+}
+
+function offerSwap() {
+
+	//Random Selection
+	var rand = getRandom(1, customOffers.length + 1);
+	if (rand > customOffers.length) {
+		rand = customOffers.length;
+	}
+	rand = rand - 1;
+	var rand2 = rand;
+	while (rand2 === rand) {
+		rand2 = getRandom(1, customOffers.length + 1);
+		if (rand2 > customOffers.length) {
+			rand2 = customOffers.length;
+		}
+		rand2 = rand2 - 1;
+	}
+
+	//Right Column
+	if (document.getElementsByClassName("offerSwap").length > 0) {
+		var right = document.getElementsByClassName("offerSwap");
+		right[0].innerHTML = "";
+		//Span
+		var rightSpan = document.createElement("span");
+		rightSpan.appendChild(document.createTextNode(customOffers[rand].highlight));
+		rightSpan.className = "highlightText";
+		right[0].appendChild(rightSpan);
+		//heading
+		var rightHead = document.createElement("h4");
+		rightHead.className = "h-linkHeading"
+		var rightLink = document.createElement("a");
+		rightLink.href = customOffers[rand].href;
+		rightLink.setAttribute("onclick", offerRouterPath(customOffers,rand));
+		var hiddenSpan = document.createElement("span");
+		hiddenSpan.setAttribute("aria-hidden","true");
+		hiddenSpan.appendChild(document.createTextNode("\u00a0" + String.fromCharCode(10095)));
+		rightLink.appendChild(document.createTextNode(customOffers[rand].heading));
+		rightLink.appendChild(hiddenSpan);
+		rightHead.appendChild(rightLink);
+		right[0].appendChild(rightHead);
+		//Body
+		var para = document.createElement("p");
+		para.appendChild(document.createTextNode(customOffers[rand].body));
+		right[0].appendChild(para);
+	}
+
+	//Bottom Offer
+	var coreImg = customOffers[rand2].image;
+	if (window.matchMedia) {
+		var mq = window.matchMedia("only screen and (min--moz-device-pixel-ratio: 2), only screen and (-o-min-device-pixel-ratio: 4/2), only screen and (-webkit-min-device-pixel-ratio: 2), only screen  and (min-device-pixel-ratio: 2), only screen and (min-resolution: 2dppx)");
+		if (mq.matches) {
+			coreImg = customOffers[rand2].imageHigh;
+		}
+	}
+	if (document.getElementsByClassName("offerBlock").length > 0) {
+		var container = document.getElementsByClassName("offerBlock");
+		container[0].innerHTML = "";
+		var imgContainer = document.createElement("div");
+		imgContainer.className = "offerImg " + customOffers[rand2].cssTitle;
+		imgContainer.setAttribute("style", "background-image: url('" + coreImg + "')");
+		container[0].appendChild(imgContainer);
+		var txtContainer = document.createElement("div");
+		txtContainer.className = "ctaBlock";
+		txtContainer.setAttribute("style", "background-color:" + customOffers[rand2].color);
+		var bottomHead = document.createElement("h3");
+		bottomHead.className = "h-promoHeading";
+		bottomHead.appendChild(document.createTextNode(customOffers[rand2].heading));
+		txtContainer.appendChild(bottomHead);
+		var bottomBody = document.createElement("p");
+		bottomBody.appendChild(document.createTextNode(customOffers[rand2].body));
+		txtContainer.appendChild(bottomBody);
+		var bottomLink = document.createElement("a");
+		bottomLink.className = "buttonSecondary";
+		bottomLink.href = customOffers[rand2].href;
+		bottomLink.setAttribute("onclick", offerRouterPath(customOffers,rand2));
+		bottomLink.appendChild(document.createTextNode(customOffers[rand2].highlight));
+		txtContainer.appendChild(bottomLink);
+		container[0].appendChild(txtContainer);
+	}
+	//Analytics
+	var offerDTM = ""
+	if (digitalData.page.pageInfo.pageName == "wfa:public:mvpHome" || digitalData.page.pageInfo.pageName == "wfa:public:homepage") {
+		offerDTM = "wfa:public:homepage|"
+	}
+	digitalData.page.internalpromotions = {
+		"promolist" : offerDTM + customOffers[rand].heading + "|os1>" + offerDTM + customOffers[rand2].heading + "|os2"
+	}
+}
+
+function promoClick(offer) {
+	_satellite.setVar("Promo:Clicked", offer);
+	_satellite.track("promotionclick");
+}
+
+//Foresee survey code - only goes on wfa.com pages, standard and RAC offer pages
+var isAspx = document.location.href.match(/\.aspx/);
+
+
+if (isAspx != null) {
+	var callReqPage = document.location.href.match(/callrequest.aspx/);
+	var callReqTYPage = document.location.href.match(/callRequestThankYou.aspx/);
+	var stdOfferPage = document.location.href.match(/form.aspx/);
+	var stdOfferTYPage = document.location.href.match(/formThankYou.aspx/);
+
+
+	if (callReqPage != null || callReqTYPage != null || stdOfferPage != null || stdOfferTYPage != null) appendForeseeScript();
+} else {
+	appendForeseeScript();
+}
+
+function appendForeseeScript () {
+	//append Foresee script tag to head section
+	var script = document.createElement( 'script' );
+	script.type = 'text/javascript';
+	script.src = 'https://www.wellsfargoadvisors.com/foresee/foresee-trigger.js';
+	$("head").append( script );
+}

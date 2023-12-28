@@ -1,0 +1,2527 @@
+/*eslint-disable*/
+function setAttributes(el, attrs) {
+  for (var key in attrs) {
+    el.setAttribute(key, attrs[key]);
+  }
+}
+
+function insertImg() {
+  //inserts hero images based on screen size
+  var bannerImg = document.getElementsByClassName('hero__imgContainer');
+  if (window.innerWidth >= 750 && bannerImg.length > 0 && heroFlag == false) {
+    var imgPath = bannerImg[0].getAttribute('data-src');
+    var hero = document.createElement('img');
+    hero.src = imgPath + '.jpg';
+    hero.srcset = imgPath + '@2x.jpg 1.5x, ' + imgPath + '@3x.jpg 2x';
+    hero.alt = '';
+    bannerImg[0].appendChild(hero);
+    heroFlag = true;
+  }
+}
+var heroFlag = false;
+
+function appendSVG() {
+  //append svgdefs file to body of page
+  var defs = new XMLHttpRequest();
+  defs.open('GET', '/images2/sitewide/svgdefs.svg', true); //path for page
+  defs.send();
+  defs.onload = function(e) {
+    var div = document.createElement('div');
+    div.innerHTML = defs.responseText;
+    document.body.insertBefore(div, document.body.childNodes[0]);
+  };
+}
+
+function accordion(t) {
+  var trigger;
+  if (t.currentTarget !== undefined) {
+    if (t.currentTarget.classList.contains('accordion__button')) {
+      trigger = this;
+    }
+  } else {
+    trigger = t;
+  }
+  var target = $('#' + trigger.getAttribute('aria-controls'));
+  if (trigger.getAttribute('aria-expanded') === 'false') {
+    target.slideDown();
+    target.attr('aria-hidden', 'false');
+    target.addClass('accordion__panel--selected');
+    trigger.classList.add('accordion__button--selected');
+    trigger.setAttribute('aria-expanded', 'true');
+  } else {
+    target.slideUp();
+    target.attr('aria-hidden', 'true');
+    target.removeClass('accordion__panel--selected');
+    trigger.classList.remove('accordion__button--selected');
+    trigger.setAttribute('aria-expanded', 'false');
+  }
+}
+
+var login = document.querySelector("[value='Sign On']"); // Sends DTM tracking when login button is clicked
+if (login !== null) {
+  login.addEventListener(
+    'click',
+    function() {
+      setCookie('CLIENTLOGINCookie', 'customer', '', 'Fri, 31 Dec 9999 23:59:59 GMT', '/', '.wellsfargoadvisors.com');
+      _satellite.track('content: login modal');
+    },
+    false
+  );
+}
+
+//control tab & accordion sections for panel pages
+function showPanel(target, trigger, panel) {
+  var nextPanel = target.getAttribute('aria-controls');
+  var selectedTrigger = document.querySelector(trigger);
+  var openPanel = document.querySelector(panel);
+  if (window.matchMedia('(min-width: 38em)').matches) {
+    if (target.classList.contains('selected')) {
+      return; //do nothing
+    } else {
+      showNextPanel(nextPanel);
+      setAriaClass(target, selectedTrigger, openPanel);
+    }
+  } else {
+    if (target.classList.contains('selected')) {
+      target.classList.remove('selected');
+      openPanel.classList.remove('selected');
+      target.setAttribute('aria-expanded', 'false');
+      openPanel.setAttribute('aria-hidden', 'true');
+    } else {
+      showNextPanel(nextPanel);
+      setAriaClass(target, selectedTrigger, openPanel);
+    }
+  }
+}
+
+function showNextPanel(panel) {
+  var nextPanel = document.querySelector('#' + panel);
+  nextPanel.classList.add('selected');
+  nextPanel.setAttribute('aria-hidden', 'false');
+  nextPanel.scrollIntoView();
+}
+
+function setAriaClass(trigger, button, activePanel) {
+  trigger.setAttribute('aria-expanded', 'true');
+  trigger.classList.add('selected');
+  if (activePanel) {
+    activePanel.classList.remove('selected');
+    activePanel.setAttribute('aria-hidden', 'true');
+  }
+  if (button) {
+    button.classList.remove('selected');
+    button.setAttribute('aria-expanded', 'false');
+  }
+}
+
+// add selected class to first panel and button
+function activePanel(panel, button) {
+  setPanelHeight();
+  panel.classList.add('selected');
+  button.classList.add('selected');
+  panel.setAttribute('aria-hidden', 'false');
+  button.setAttribute('aria-selected', 'true');
+}
+
+//open specific panel if referenced by external link
+function activeTargetPanel() {
+  var selected = document.querySelectorAll('.selected');
+  var panels = document.querySelectorAll('.panelContainer__panel');
+  var panelOne = panels[0];
+  var buttons = document.querySelectorAll('.panelContainer__button');
+  var buttonOne = buttons[0];
+  var path = window.location.href;
+  if (path.indexOf('panel') != -1) {
+    var newPath = path.split('?');
+    newPath = newPath[newPath.length - 1];
+    var heading = newPath.slice(5, newPath.length);
+    heading = 'heading' + heading;
+    var newPanel = document.getElementById(newPath);
+    var newHeading = document.getElementById(heading);
+  }
+  if (newPath && window.innerWidth >= 600 && selected.length == 0) {
+    activePanel(newPanel, newHeading);
+    newPanel.scrollIntoView();
+  } else if (newPath && window.innerWidth < 600 && selected.length == 0) {
+    activePanel(newPanel, newHeading);
+    newPanel.scrollIntoView();
+  } else if (window.innerWidth >= 600 && selected.length == 0) {
+    activePanel(panelOne, buttonOne);
+  }
+}
+// sets height of main content area to the height of the tallest panel
+function setPanelHeight() {
+  var panels = [].slice.call(document.querySelectorAll('.panelContainer__panel'));
+  var wrapper = document.querySelector('.relativeContainer');
+  if (
+    window.matchMedia('(min-width: 37.5em)').matches &&
+    document.querySelectorAll('.panelContainer__panel').length > 0
+  ) {
+    var mh = 0;
+    panels.forEach(function(panel) {
+      if (!panel.classList.contains('selected')) {
+        panel.classList.add('selected');
+      }
+      if (mh < panel.offsetHeight) {
+        mh = panel.offsetHeight;
+      }
+      if (panel.classList.contains('selected')) {
+        panel.classList.remove('selected');
+      }
+    });
+    if (document.querySelector('.panelContainer__button--tab') !== null) {
+      var tabHeight = document.querySelector('.panelContainer__button--tab').offsetHeight;
+      wrapper.style.height = tabHeight + mh + 'px';
+    } else {
+      wrapper.style.height = mh + 'px'; //might need to add this when web fonts are in play (mh - (mh * .15));
+    }
+  } else {
+    if (wrapper !== null) {
+      wrapper.style.height = 'auto';
+    }
+  }
+}
+
+function tabHeightAdjust(target) {
+  // Adjust height on panel items on load, click & resize
+  var wrapper = document.querySelector('.relativeContainer');
+  if (target === 'init') {
+    target = '.panelContainer__panel.selected';
+  } else {
+    target = '#' + document.querySelector(target).getAttribute('aria-controls');
+  }
+  if (document.querySelector(target).offsetHeight > wrapper.offsetHeight) {
+    var height = document.querySelector(target).offsetHeight + 30;
+    wrapper.style.height = height + 'px';
+  }
+}
+
+// function enableModal() {   $('body').addClass('modalActive');
+// $('.page').attr('aria-hidden', 'true');   $('#exitLink').attr('disabled',
+// 'true');   $('#newModal').keydown(function(ev) {     if (ev.shiftKey &&
+// ev.which == 9) {       $('#continueLink').focus();       ev.preventDefault();
+//     } else if (ev.which == 27) {       $('#modalExit').click();     }   });
+// $('#continueLink').keydown(function(ev) {     if (ev.which == 9) {
+// $('#modalExit').focus();       ev.preventDefault();     }   }); } function
+// modalExit() {   $('.page').attr('aria-hidden', 'false');
+// $(modalOverlay).remove();   $('[role=dialog]').remove();
+// $('body').removeClass('modalActive');   $('#exitLink')
+// .removeAttr('disabled')     .focus(); } var modalExitMsg = {   image:
+// 'images2/sitewide/wf-advisors-rgb-54px.png',   heading: 'You are leaving the
+// Wells Fargo Advisors website',   body:     'You are leaving
+// wellsfargoadvisors.com and entering a website that Wells Fargo Advisors does
+// not control. Wells Fargo Advisors has provided this link for your
+// convenience, but does not endorse and is not responsible for the content,
+// links, privacy policy, or security policy of this website.',   close:
+// 'Close',   closeLink: 'Cancel',   continue: 'Continue',   href:
+// 'http://brokercheck.finra.org' }; function modalDiv() {
+// $('.page').attr('aria-hidden', 'true');   var modalOverlay =
+// $('<div>').attr({     id: 'modalOverlay',     tabindex: '0' });
+// $(modalOverlay).appendTo('body'); $('#trigger-modal').attr('disabled',
+// 'true');   var modal = $('<div role="dialog" id="dialogContainer">').attr({
+// 'aria-labelledby': 'modalHeader',     'aria-describedby': 'modalText',
+// tabindex: '0'   }); var firstElement = document.createElement('div');
+// firstElement.setAttribute('tabindex', '0'); $(firstElement).appendTo(modal);
+// var logoImg = document.createElement('img');   setAttributes(logoImg, { src:
+// modalExitMsg.image,     alt: 'Wells Fargo Advisors',     class: 'logo' });
+// $(logoImg).appendTo(modal);   var modalCloseBtn =
+// document.createElement('button');   setAttributes(modalCloseBtn, {     id:
+// 'modalExit',     class: 'modalClose',     'aria-label': 'close modal',
+// onclick: 'modalExit();'   });
+// modalCloseBtn.appendChild(document.createTextNode(modalExitMsg.close));
+// $(modalCloseBtn).appendTo(modal);   var modalHeader =
+// document.createElement('h1');   setAttributes(modalHeader, {     class: 'h
+// h--topHeading',     id: 'modalHeader'   });
+// modalHeader.appendChild(document.createTextNode(modalExitMsg.heading));
+// modalText = document.createElement('p');   setAttributes(modalText, {     id:
+// 'modalText'   });
+// modalText.appendChild(document.createTextNode(modalExitMsg.body));
+// $(modalHeader).appendTo(modal);   $(modalText).appendTo(modal);   var
+// modalLinks = document.createElement('div');   modalLinks.className =
+// 'u-textRight';   var cancelLink = document.createElement('button');
+// setAttributes(cancelLink, {     class: 'link--inline',     'aria-label':
+// 'close modal',     id: 'cancelLink',     onclick: 'modalExit();'   });
+// cancelLink.appendChild(document.createTextNode('Cancel'));   var continueLink
+// = document.createElement('a');   setAttributes(continueLink, {     class:
+// 'button button--primary u-marginLeft',     href: modalExitMsg.href, target:
+// '_blank',     onclick: 'modalExit();',     id: 'continueLink'   });
+// continueLink.appendChild(document.createTextNode('Continue'));
+// modalLinks.appendChild(cancelLink);   modalLinks.appendChild(continueLink);
+// $(modalLinks).appendTo(modal);   var lastElement =
+// document.createElement('div');   lastElement.setAttribute('tabindex', '0');
+// $(lastElement).appendTo(modal);   $(modal).appendTo('body');
+// $('#continueLink').focus();   $('body').addClass('modalActive');
+// $('#exitLink').attr('disabled', 'true');
+// $('#lastElement').focusin(function(e) {     $('#firstButton').focus();   });
+// $('#firstElement').focusin(function(e) {     $('#lastButton').focus();   });
+// $('body').on('keyup', function(e) {     if (e.keyCode == '27') {
+// $('.page').attr('aria-hidden', 'false');       $(modalOverlay).remove();
+// $(modal).remove();       $('body').removeClass('modalActive'); $('#exitLink')
+//         .removeAttr('disabled')         .focus(); //works on iOS     }   });
+// $('[role=dialog] button').click(function(e) { $('.page').attr('aria-hidden',
+// 'false');     $(modalOverlay).remove(); $(modal).remove();
+// $('body').removeClass('modalActive'); $('#exitLink') .removeAttr('disabled')
+// .focus(); //works on iOS }); } function removeModalCookie(name, value) {
+// document.cookie = name + '=; path=/; expires= Thu, 01 Jan 1970 00:00:01
+// GMT;'; }//test
+function modalExit() {
+  $('.page').attr('aria-hidden', 'false');
+  $('#modalOverlay').remove();
+  $('[role=dialog]').remove();
+  $('body').removeClass('modalActive');
+  $('[disabled=true]')
+    .removeAttr('disabled')
+    .focus();
+}
+
+function appendModal(e) {
+  e.preventDefault();
+  var href = e.target.getAttribute('href');
+  e.target.setAttribute('disabled', 'true');
+  $('body').addClass('modalActive');
+  $('.page').attr('aria-hidden', 'true');
+  $.ajax('/modalPage.htm', {
+    success: function(response) {
+      $('#modal-container').html(response);
+    }
+  });
+  setTimeout(function() {
+    var continueLink = document.getElementById('continueLink');
+    var modalExit = document.getElementById('modalExit');
+    modalExit.focus();
+    continueLink.setAttribute('href', href);
+    continueLink.addEventListener('keydown', function(e) {
+      if (e.keyCode === 9) {
+        e.preventDefault();
+        $(modalExit).focus();
+      } else if (e.keyCode === 32) {
+        continueLink.click();
+      }
+    });
+    document.getElementById('modalExit').addEventListener('keydown', function(e) {
+      if (e.keyCode === 40) {
+        e.preventDefault();
+        $('#modalHeader').focus();
+      }
+    });
+    document.getElementById('modalHeader').addEventListener('keydown', function(e) {
+      if (e.keyCode === 40) {
+        e.preventDefault();
+        $('#modalText').focus();
+      }
+    });
+    document.getElementById('modalText').addEventListener('keydown', function(e) {
+      if (e.keyCode === 40) {
+        e.preventDefault();
+        $('#cancelLink').focus();
+      }
+    });
+    document.getElementById('cancelLink').addEventListener('keydown', function(e) {
+      if (e.keyCode === 40) {
+        e.preventDefault();
+        $('#continueLink').focus();
+      }
+    });
+    document.getElementById('cancelLink').addEventListener('click', modalExit);
+    document.getElementById('modalExit').addEventListener('click', modalExit);
+    document.getElementById('continueLink').addEventListener('click', modalExit);
+    $('#modalOverlay').attr('onclick', 'modalExit();'); //Triggers modalExit(); when modalOverlay gets clicked, closing the modal.
+  }, 350);
+}
+$('.openModal').on('click', appendModal);
+$('body').on('keyup', function(e) {
+  if (e.keyCode == '27') {
+    if (document.querySelector('.modal__video') === null) {
+      modalExit();
+    }
+  }
+});
+
+function iOS() {
+  var iDevices = ['iPad Simulator', 'iPhone Simulator', 'iPod Simulator', 'iPad', 'iPhone', 'iPod', 'MacIntel'];
+  if (!!navigator.platform) {
+    while (iDevices.length) {
+      if (navigator.platform === iDevices.pop()) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+/*-------------------------------------
+Video player & modal object/methods
+---------------------------------*/
+var videoPlayer = {
+  videoAriaSwitch: function(element, state) {
+    element.setAttribute('aria-label', state);
+    element.firstElementChild.setAttribute('alt', state);
+  },
+  createModal: function() {
+    // create page modal overlay
+    var modalOverlay = document.createElement('div');
+    setAttributes(modalOverlay, {
+      class: 'modal__video--hidden',
+      id: 'modalOverlay',
+      tabindex: '0'
+    });
+    // create video modal containing div
+    var modal__video = document.createElement('div');
+    setAttributes(modal__video, {
+      tabindex: '-1',
+      class: 'modal__video modal__video--hidden',
+      role: 'dialog'
+    });
+
+    // create and append video modal first row
+
+    var modalFirstRow =
+      '<div class="modal__video--row"><img src="/images2/sitewide/wf-advisors-rgb-54px.' +
+      'png" alt="Wells Fargo Advisors"/><button class="button modal__video--close" aria' +
+      '-label="close modal">Close</button></div>';
+    $(modalFirstRow).appendTo(modal__video);
+    // append modal and video modal to page (class hidden)
+    $('body').append(modalOverlay);
+    $('body').append(modal__video);
+  },
+  modalEvents: function() {
+    // Set events for all video modal close buttons
+    var videoModalClose = document.querySelectorAll('.modal__video--close');
+    for (var i = 0; i < videoModalClose.length; i++) {
+      videoModalClose[i].addEventListener('click', function() {
+        videoPlayer.videoModalClose(trigger);
+      });
+      videoModalClose[i].addEventListener('keydown', function(ev) {
+        if (ev.shiftKey && ev.which === 9) {
+          ev.preventDefault();
+          $(this)
+            .parent()
+            .next()
+            .next()
+            .children()
+            .focus();
+        }
+      });
+    }
+
+    // Set keydown|tab events for all modal video transcripts
+    var modalVideoTranscript = $('.transcript--modal').children();
+    for (var i = 0; i < modalVideoTranscript.length; i++) {
+      modalVideoTranscript[i].addEventListener('keydown', function(ev) {
+        if (!ev.shiftKey && ev.which === 9) {
+          ev.preventDefault();
+          $(this)
+            .parent()
+            .prev()
+            .prev()
+            .find('.modal__video--close')
+            .focus();
+        }
+      });
+    }
+
+    // Set keydown|escape event for all video modals
+    var modal__video = document.querySelectorAll('.modal__video');
+    for (var i = 0; i < modal__video.length; i++) {
+      modal__video[i].addEventListener('keydown', function(ev) {
+        if (ev.which === 27) {
+          if (
+            $(this)
+              .find('.video-wrapper')
+              .hasClass('video--fullscreen') === false
+          ) {
+            videoPlayer.videoModalClose(trigger);
+          }
+        }
+      });
+    }
+
+    // Set click event for all modal trigger buttons, define trigger
+    var modalTrigger = document.querySelectorAll('.modal__trigger--video');
+    for (var i = 0; i < modalTrigger.length; i++) {
+      modalTrigger[i].addEventListener('click', function() {
+        videoPlayer.openModal();
+        trigger = this;
+      });
+    }
+  },
+  populateModal: function(poster, source, captions, transcript, id) {
+    var modalVideoSource = {
+      poster: poster,
+      source: source,
+      captions: captions,
+      transcript: transcript,
+      id: id
+    };
+    var video =
+      '<div class="video-wrapper video__wrapper--2017"><video class="video-content" con' +
+      'trols="controls" poster="' +
+      modalVideoSource.poster +
+      '"tabindex="-1" width="840" id="' +
+      modalVideoSource.id +
+      '"><source src="' +
+      modalVideoSource.source +
+      '"type="video/mp4"></source><track kind="subtitles" label="English subtitles" src' +
+      '="' +
+      modalVideoSource.captions +
+      '"srclang="en"></track>Your browser does not support HTML5 video tag.</video><div' +
+      ' class="video-controls"><div class="sr-text" id="playbtn">Press to play</div><bu' +
+      'tton aria-describedby="playbtn-' +
+      modalVideoSource.id +
+      '" class="video-controls__button video-controls__button--play video-control" id="' +
+      'play" aria-label="Play video"><img alt="Play video" src="/images2/mvp/mediaIcons' +
+      '/iconsupdate_0817/play_bar_icon.svg" /></button><div class="durationTextContaine' +
+      'r"><span class="vidDurationText video-control" id="current">0:00</span> /<span c' +
+      'lass="vidDurationText video-control" id="duration">0:00</span></div><input aria-' +
+      'label="Video progress" class="vidDuration video-control vidDuration__seekBar" id' +
+      '="seekBar" type="range" value="0" min="0" max="0"/><div class="bufferBar video-control" id="buff' +
+      'erBar"></div><button aria-label="Volume press to mute" class="video-controls__bu' +
+      'tton video-controls__button--volume video-control" id="volume" type="button"><im' +
+      'g alt="Volume press to mute" src="/images2/mvp/mediaIcons/iconsupdate_0817/volum' +
+      'e_full_bar_icon.svg" /></button><input aria-label="Volume Slider" class="volumeB' +
+      'ar video-control" id="volumeBar" min="0"  max="1" step="0.01" type="range" value=' +
+      '"1" /><button aria-label="Show captions" class="video-controls__button video-con' +
+      'trols__button--closedCaption video-control" data-state="subtitles"id="subtitles"' +
+      ' type="button"><img alt="Show captions" src="/images2/mvp/mediaIcons/iconsupdate' +
+      '_0817/closed_caption_bar_icon.svg" /></button><button class="video-controls__but' +
+      'ton video-controls__button--fullScreen video-control" data-state="go-fullscreen"' +
+      ' id="fs" type="button"><img alt="Fullscreen" src="/images2/mvp/mediaIcons/iconsu' +
+      'pdate_0817/expand_bar_icon.svg" /></button></div></div><p class="transcript tran' +
+      'script--modal"><a aria-label="Transcript pdf" class="transcriptLink" href="' +
+      modalVideoSource.transcript +
+      '" target="_blank">Transcript PDF</a></p>';
+    $('.modal__video')
+      .attr('aria-labelledby', 'play-' + modalVideoSource.id)
+      .append(video);
+  },
+  openModal: function(element) {
+    $('.page').attr('aria-hidden', 'true');
+    $('body').addClass('modalActive');
+    $('#modalOverlay, .modal__video').removeClass('modal__video--hidden');
+    //Triggers video model to close when clicking outside
+    $('#modalOverlay').on('click', function() {
+      videoPlayer.videoModalClose(trigger);
+    });
+    if ($('.video-content').attr('controls') !== 'controls') {
+      // if using custom controls/if not iOS+safari
+      $('.modal__video')
+        .find('.video-controls__button--play')
+        .focus();
+    } else {
+      $('.modal__video--close').focus();
+    }
+  },
+  videoModalClose: function(trigger) {
+    var videos = document.querySelectorAll('video');
+    for (var i = 0; i < videos.length; i++) {
+      videos[i].pause();
+    }
+    var playButton = document.querySelector('.video-controls__button--play');
+    var path;
+    videoPlayer.videoAriaSwitch(playButton, 'Play video');
+    path = 'play_bar_icon'; // set path to play image
+    playButton.firstElementChild.setAttribute('src', '/images2/mvp/mediaIcons/iconsupdate_0817/' + path + '.svg');
+
+    $('body').removeClass('modalActive');
+    $('.page').attr('aria-hidden', 'false');
+    $('.modal__video').addClass('modal__video--hidden');
+    $('#modalOverlay').addClass('modal__video--hidden');
+    $(trigger).focus();
+  },
+  videoInit: function() {
+    var vidList = document.getElementsByTagName('video');
+    if (vidList.length > 0) {
+      for (i = 0; i < vidList.length; i++) {
+        var source = vidList[i].getElementsByTagName('source')[0];
+        source = source.getAttribute('src').split('/');
+        source = source[source.length - 1];
+        source = source.substr(0, source.length - 4);
+        vidList[i].setAttribute('id', source);
+        videoPlayer.vidControls(vidList[i].id);
+      }
+    }
+  },
+  vidControls: function(target) {
+    var video = document.getElementById(target); // set video and event outside of iOS condition
+    if (iOS() && navigator.userAgent.toLowerCase().indexOf('chrome') == -1) {
+      // if iOS and Safari
+      $('.video-controls')
+        .children()
+        .hide(); // hide custom controls so native controls are active
+      video.setAttribute('tabindex', '0'); // allow focus to go to video container
+    } else {
+      var vidList = document.getElementsByTagName('video');
+      for (var i = 0; i < vidList.length; i++) {
+        vidList[i].removeAttribute('controls');
+      }
+      var buttons = document.getElementById(target).parentElement.querySelectorAll('.video-control');
+      for (i = 0; i < buttons.length; i++) {
+        buttons[i].id = buttons[i].id + '-' + target; // set an id for each button according to the video it's housed within
+      }
+
+      // Video player variables
+      var videoWrapper = video.parentNode;
+      var videoControlButtons = document.querySelectorAll('.video-controls__button'); // set var's using target in case > 1 video on page
+      var videoControls = document.querySelectorAll('.video-control');
+      var playButton = document.getElementById('play-' + target);
+      var seekBar = document.getElementById('seekBar-' + target);
+      var volumeButton = document.getElementById('volume-' + target);
+      var volumeBar = document.getElementById('volumeBar-' + target);
+      var subtitles = document.getElementById('subtitles-' + target);
+      var fullScreenButton = document.getElementById('fs-' + target);
+      var hoverFlag = false;
+
+      /*------------------------
+          Video wrapper click event
+      -------------------------*/
+      video.addEventListener('click', function() {
+        playVideo(); // play/pause video and change aria attr's, focus on play button
+        $('.video-controls__button--play').focus(); // this triggers a small flash since focus moves off of video and onto video controls)
+      });
+
+      playButton.addEventListener('click', function() {
+        // set click event on play button
+        playVideo();
+      });
+
+      /*------------------------
+      Video wrapper hover event
+      -------------------------*/
+      if ($('.modal__video').length === 0) {
+        videoWrapper.addEventListener('mouseenter', function() {
+          // on hovering into video wrapper
+          if (this.querySelector('.video-controls').classList.contains('video-controls--hidden')) {
+            // if video controls are hidden
+            this.querySelector('.video-controls').classList.remove('video-controls--hidden'); // show them
+          }
+        });
+        videoWrapper.addEventListener('mouseleave', function() {
+          // when mousing away from video player
+          if (video.currentTime == 0) {
+            // and the video current time is 0/video has not been started
+            this.querySelector('.video-controls').classList.add('video-controls--hidden'); // hide the controls
+          }
+        });
+      }
+
+      /*------------------------------
+      Video controls container keyboard events
+      ---------------------------------*/
+      for (var i = 0; i < videoControls.length; i++) {
+        // when tabbing/focusing to the video controls
+        videoControls[i].addEventListener('focus', function() {
+          if (
+            $(this)
+              .closest('.video-controls')
+              .hasClass('video-controls--hidden')
+          ) {
+            // if this video's controls are hidden
+            $(this)
+              .closest('.video-controls')
+              .removeClass('video-controls--hidden'); // show them
+          }
+        });
+        videoControls[i].addEventListener('blur', function() {
+          // when tabbing away from/blurring controls
+          if (
+            !$(this)
+              .closest('.video-controls')
+              .hasClass('video-controls--hidden')
+          ) {
+            // if this video's controls are showing
+            if (video.currentTime == 0) {
+              // and the video current time is 0 || video has not been started
+              if (document.querySelector('.modal__trigger--video') == null) {
+                $(this)
+                  .closest('.video-controls')
+                  .addClass('video-controls--hidden'); // hide them
+              }
+            }
+          }
+        });
+      }
+
+      /*----------------------
+      Control button hover events
+      --------------------------*/
+      for (var i = 0; i < videoControlButtons.length; i++) {
+        videoControlButtons[i].addEventListener('mouseenter', function() {
+          var path = this.firstElementChild.getAttribute('src');
+          if (document.getElementById(this.id).classList.contains('video-player__button--hover') === false) {
+            document.getElementById(this.id).classList.add('video-player__button--hover');
+            hoverFlag = true;
+            path = path.substr(0, path.length - 4) + '_gold'; // remove '.svg' and add _gold
+            this.firstElementChild.setAttribute('src', path + '.svg'); // add '_gold.svg' to swap in gold file for hovering
+          }
+        });
+        videoControlButtons[i].addEventListener('mouseleave', function() {
+          var path = this.firstElementChild.getAttribute('src');
+          if (document.getElementById(this.id).classList.contains('video-player__button--hover') === true) {
+            document.getElementById(this.id).classList.remove('video-player__button--hover');
+            hoverFlag = false;
+            path = path.substr(0, path.length - 9); // source path will have had '_gold.svg' on it - remove those last 9 chars
+            this.firstElementChild.setAttribute('src', path + '.svg'); // add '_gold.svg' to swap in gold file for hovering
+          }
+        });
+      }
+
+      function playVideo() {
+        var path;
+        if (video.paused == true) {
+          // if video is paused
+          video.play(); // play the video
+          videoPlayer.videoAriaSwitch(playButton, 'Pause video toggle');
+          $('#playbtn').text('Press to pause');
+          path = 'pause_bar_icon'; // set path to pause image
+        } else {
+          // if video is playing
+          video.pause(); // pause the video
+          videoPlayer.videoAriaSwitch(playButton, 'Play video toggle');
+          $('#playbtn').text('Press to play');
+          path = 'play_bar_icon'; // set path to play image
+        }
+        if (hoverFlag) {
+          // if hovering over element
+          path = path + '_gold'; // add _gold to file name in var path
+        }
+        playButton.firstElementChild.setAttribute('src', '/images2/mvp/mediaIcons/iconsupdate_0817/' + path + '.svg'); // change the src file of the play button
+      }
+
+      /*-------------------
+      Volume events
+      ---------------------*/
+      var volumeBeforeMute = 1; // set to 1 by default for page load
+      volumeButton.addEventListener('click', function() {
+        volumeMuteCheck(video.volume); // pass current value of value input to setVideoVolume
+      });
+
+      function volumeMuteCheck(volume) {
+        if (volume === 0) {
+          // if currently muted
+          video.muted = false; // unmute
+          video.volume = volumeBeforeMute;
+          videoPlayer.videoAriaSwitch(volumeButton, 'Volume press to mute toggle');
+          $(volumeBar).val(volumeBeforeMute);
+        } else {
+          // if not currently muted
+          video.muted = true; // mute the video
+          video.volume = 0; // set video volume to 0
+          videoPlayer.videoAriaSwitch(volumeButton, 'Volume press to unmute toggle');
+          $(volumeBar).val(0);
+        }
+        setVolumeImage(video.volume);
+      }
+      volumeBar.addEventListener('change', volumeBarUpdate);
+
+      volumeBar.addEventListener('change', volumeBarUpdate);
+      volumeBar.addEventListener('mousemove', volumeBarUpdate);
+
+      function volumeBarUpdate() {
+        this.setAttribute('value', this.value);
+        $(this).val(this.value);
+        video.volume = this.value;
+        volumeBeforeMute = video.volume;
+        if (video.volume > 0) {
+          video.muted = false;
+        }
+        setVolumeImage(video.volume);
+      }
+
+      function setVolumeImage(volume) {
+        var path;
+        if (volume < 0.01) {
+          // define the volume range and set accordingly
+          path = 'off_bar_icon';
+        } else if (volume > 0 && volume <= 0.25) {
+          path = 'low_bar_icon';
+        } else if (volume >= 0.26 && volume <= 0.75) {
+          path = 'half_bar_icon';
+        } else if (volume >= 0.76) {
+          path = 'full_bar_icon';
+        }
+        if (hoverFlag) {
+          path = path + '_gold';
+        }
+        volumeButton.firstElementChild.setAttribute(
+          'src',
+          '/images2/mvp/mediaIcons/iconsupdate_0817/volume_' + path + '.svg'
+        );
+      }
+
+      /*----------------------
+      Closed caption button event
+      --------------------------*/
+      subtitles.addEventListener('click', function() {
+        var path;
+        if (video.textTracks[0].mode == 'hidden' || video.textTracks[0].mode == 'disabled') {
+          video.textTracks[0].mode = 'showing';
+          path = 'closed_caption_active_bar_icon';
+          videoPlayer.videoAriaSwitch(subtitles, 'Hide captions toggle');
+        } else {
+          video.textTracks[0].mode = 'hidden';
+          path = 'closed_caption_bar_icon';
+          videoPlayer.videoAriaSwitch(subtitles, 'Show captions toggle');
+        }
+        if (hoverFlag) {
+          // if hovering over element
+          path = path + '_gold'; // add _gold to file name
+        }
+        this.firstElementChild.setAttribute('src', '/images2/mvp/mediaIcons/iconsupdate_0817/' + path + '.svg');
+      });
+
+      /*--------------------------
+      Seek bar and buffering events
+      ----------------------------*/
+      video.addEventListener('loadedmetadata', function() {
+        seekBar.setAttribute('max', video.duration);
+      });
+
+      // Convert current time and duration to m:ss
+      function timeCode(time) {
+        var minutes = Math.floor(time / 60) | 0;
+        var seconds = (time - minutes * 60) | 0;
+        if (seconds < 10) {
+          seconds = '0' + seconds;
+        }
+        var total = minutes + ':' + seconds;
+        return total;
+      }
+
+      video.addEventListener('timeupdate', function() {
+        seekBar.value = video.currentTime;
+        seekBar.setAttribute('value', seekBar.value);
+        $('#duration-' + target).text(timeCode(video.duration));
+        $('#current-' + target).text(timeCode(video.currentTime));
+      });
+
+      seekBar.addEventListener('mousedown', function() {
+        video.pause();
+        videoPlayer.videoAriaSwitch(playButton, 'Play video');
+        var path = 'play_bar_icon';
+        playButton.firstElementChild.setAttribute('src', '/images2/mvp/mediaicons/iconsupdate_0817/' + path + '.svg');
+      });
+      seekBar.addEventListener('mouseup', function() {
+        videoPlayer.videoAriaSwitch(playButton, 'Pause video');
+        var path = 'pause_bar_icon';
+        playButton.firstElementChild.setAttribute('src', '/images2/mvp/mediaicons/iconsupdate_0817/' + path + '.svg');
+        video.currentTime = seekBar.value;
+        video.play();
+      });
+
+      seekBar.addEventListener('click', function() {
+        video.currentTime = seekBar.value;
+      });
+
+      seekBar.addEventListener('keydown', function(ev) {
+        if (ev.keyCode === 37 || ev.keyCode === 39) {
+          video.pause();
+          videoPlayer.videoAriaSwitch(playButton, 'Play video');
+          var path = 'play_bar_icon';
+          playButton.firstElementChild.setAttribute('src', '/images2/mvp/mediaicons/iconsupdate_0817/' + path + '.svg');
+        }
+      });
+
+      seekBar.addEventListener('keyup', function(ev) {
+        if (ev.keyCode === 37 || ev.keyCode === 39) {
+          videoPlayer.videoAriaSwitch(playButton, 'Pause video');
+          var path = 'pause_bar_icon';
+          playButton.firstElementChild.setAttribute('src', '/images2/mvp/mediaicons/iconsupdate_0817/' + path + '.svg');
+          video.currentTime = seekBar.value;
+          video.play();
+        }
+      });
+
+      video.addEventListener('ended', function(ev) {
+        setTimeout(function() {
+          var path = 'play_bar_icon';
+          videoPlayer.videoAriaSwitch(playButton, 'Play video');
+          playButton.firstElementChild.setAttribute('src', '/images2/mvp/mediaicons/iconsupdate_0817/' + path + '.svg');
+          seekBar.value = 0;
+          seekBar.setAttribute('value', seekBar.value);
+          video.load();
+        }, 1000);
+      });
+
+      /*--------------------------
+      Full screen events
+      --------------------------*/
+      function isFullScreen() {
+        return !!(
+          document.fullScreen ||
+          document.webkitIsFullScreen ||
+          document.mozFullScreen ||
+          document.msFullscreenElement ||
+          document.fullscreenElement
+        );
+      }
+
+      $(document).on('webkitfullscreenchange mozfullscreenchange fullscreenchange MSFullscreenChange', function() {
+        if (!isFullScreen()) {
+          $(video)
+            .parent()
+            .removeClass('video--fullscreen');
+          $(video)
+            .next()
+            .removeClass('video-controls--fullscreen');
+        }
+      });
+
+      fullScreenButton.addEventListener('click', function() {
+        $(video)
+          .parent()
+          .addClass('video--fullscreen');
+        $(video)
+          .next()
+          .addClass('video-controls--fullscreen');
+        if (isFullScreen()) {
+          if (document.exitFullscreen) document.exitFullscreen();
+          else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
+          else if (document.webkitCancelFullScreen) document.webkitCancelFullScreen();
+          else if (document.msExitFullscreen) document.msExitFullscreen();
+        } else {
+          if (video.parentElement.requestFullscreen) {
+            video.parentElement.requestFullscreen();
+          } else if (video.mozRequestFullScreen) {
+            video.parentElement.mozRequestFullScreen();
+          } else if (video.webkitRequestFullscreen) {
+            video.parentElement.webkitRequestFullscreen();
+          } else if (video.msRequestFullscreen) {
+            video.parentElement.msRequestFullscreen();
+          }
+        }
+      });
+      playButton.addEventListener('keydown', function(ev) {
+        if (isFullScreen() && (ev.keyCode === 9 && ev.shiftKey)) {
+          ev.preventDefault();
+          fullScreenButton.focus();
+        }
+      });
+
+      fullScreenButton.addEventListener('keydown', function(ev) {
+        if (isFullScreen() && (ev.keyCode === 9 && !ev.shiftKey)) {
+          ev.preventDefault();
+          playButton.focus();
+        }
+      });
+    }
+  }
+};
+
+if ($('.modal__trigger--video').length > 0) {
+  var trigger;
+  videoPlayer.createModal();
+  var currentURL = window.location.href; // retrieve current href
+  var poster, source, captions, transcript, id;
+
+  if (currentURL.indexOf('intuitive-investor') !== -1 || currentURL.indexOf('portfolio') !== -1) {
+    poster = '/images2/II_pages/ii_landing_poster.jpg';
+    source =
+      'https://www.wellsfargomedia.com/wfa/intuitive-investor/Jan5_2018_WellsFargo_Web_Edit_v19_NO_SLATE_optimized.mp4';
+    captions = '/services/ii_captions.vtt';
+    transcript = '/services/videos/II_LPvideo_transcript.pdf';
+    id = 'Jan5_2018_WellsFargo_Web_Edit_v19_NO_SLATE_optimized';
+  } else if (currentURL.indexOf('about') !== -1) {
+    poster = '/video/kowach-aboutUs/poster928x522.jpg';
+    source = 'https://www.wellsfargomedia.com/wfa/dk-video/video_female.mp4';
+    captions = '/video/kowach-aboutUs/i_love_my_job_male.vtt';
+    transcript = '/video/kowach-aboutUs/DK_client_video_description.pdf';
+    id = 'I_love_my_job_DK_male';
+  }
+
+  videoPlayer.populateModal(poster, source, captions, transcript, id);
+  videoPlayer.modalEvents();
+
+  // Auto launch the modal if coming from secure space/iFrame passing 'modalVideoPlay
+  if (currentURL.indexOf('modalVideoPlay') !== -1) {
+    videoPlayer.openModal();
+  }
+}
+videoPlayer.videoInit();
+
+//carousel
+$('.slide__viewer').each(function() {
+  var $this = $(this);
+  var $group = $this.find('.slide__group');
+  var $slides = $this.find('.slide');
+  var buttonArray = [];
+  var currentIndex = 0;
+  var timeout;
+
+  function move(newIndex) {
+    var animateLeft, slideLeft;
+
+    if ($group.is(':animated') || currentIndex === newIndex) {
+      return;
+    }
+
+    buttonArray[currentIndex].removeClass('active').attr('aria-selected', 'false');
+    buttonArray[newIndex].addClass('active').attr('aria-selected', 'true');
+
+    if (newIndex > currentIndex) {
+      slideLeft = '100%';
+      animateLeft = '-100%';
+    } else {
+      slideLeft = '-100%';
+      animateLeft = '100%';
+    }
+
+    $slides.eq(newIndex).css({
+      left: slideLeft,
+      display: 'table'
+    });
+
+    $group.animate(
+      {
+        left: animateLeft
+      },
+      function() {
+        $slides.eq(currentIndex).css({
+          display: 'none'
+        });
+        $slides.eq(newIndex).css({
+          left: 0
+        });
+        $group.css({
+          left: 0
+        });
+        currentIndex = newIndex;
+      }
+    );
+  }
+
+  $.each($slides, function(index) {
+    // Create a button element for the button
+    var $button = $(
+      '<button class="slide__btn" aria-selected="false" role="tab"><svg class="icon car' +
+        'ousel__btn" role="image" focusable="false" alt="" viewbox="0 0 7.5 7.5" width="1' +
+        'em", height="1em"><use xlink:href="#carousel_dot"/></svg></button>'
+    );
+
+    if (index === currentIndex) {
+      $button.addClass('active');
+      $button.attr('aria-selected', 'true');
+    }
+    $button
+      .on('click', function() {
+        move(index);
+      })
+      .appendTo('.slide__buttons');
+    buttonArray.push($button);
+  });
+
+  var buttonIndex = document.getElementsByClassName('slide__btn');
+  var carouselHeadings = document.getElementsByClassName('h--promoHeading');
+  for (var i = 0; i < buttonIndex.length; i++) {
+    // buttonIndex[i].setAttribute('aria-controls', 'panel' + (i + 1));
+    buttonIndex[i].setAttribute('id', 'slider' + (i + 1));
+    buttonIndex[i].setAttribute('aria-label', carouselHeadings[i].innerHTML);
+  }
+});
+
+// //This function is on every page in the site function appendSVG() { //append
+// svgdefs file to body of page   var defs = new XMLHttpRequest();
+// //defs.open("GET", "../images2/sitewide/svgdefs.svg", true); //uncomment for
+// component only   defs.open('GET', '/images2/sitewide/svgdefs.svg', true);
+// //path for page   defs.send();   defs.onload = function(e) {     var div =
+// document.createElement('div');     div.innerHTML = defs.responseText;
+// document.body.insertBefore(div, document.body.childNodes[0]);   }; }
+
+function setActive__paths() {
+  var currentURL = window.location.href; // retrieve current href
+  var paths = currentURL.substring(currentURL.lastIndexOf('.com') + 5, currentURL.length); // retrieve URL path directly after ".com/"
+  var path__sections = paths.split('/'); // split to array
+  setActive__elements(path__sections, $('.navItem__button--main'), 'section'); // set the active section
+  setActive__elements(path__sections, $('.navItem__button--submenu'), 'subsection'); // set the active subsection (mobile)
+  setActive__elements(path__sections, $('.navItem').not('.meganav__global--li .navItem'), 'page'); // set the current page
+}
+
+function setActive__elements(toMatch, toIterate, spanText) {
+  if (spanText !== 'page') {
+    // if not setting current page
+    if (spanText === 'section') {
+      // and setting current section
+      if (toMatch.length === 1) {
+        toMatch[0] = toMatch[0].substring(toMatch[0], toMatch[0].lastIndexOf('.'));
+      }
+      toMatch = toMatch[0];
+    } else if (spanText === 'subsection') {
+      // of if setting current subsection
+      if (toMatch.length === 2) {
+        toMatch[1] = toMatch[1].substring(toMatch[1], toMatch[1].lastIndexOf('.'));
+        toMatch = toMatch[1];
+      } else if (toMatch.length === 3) {
+        toMatch = toMatch[1];
+      }
+    }
+    for (var i = 0; i < toIterate.length; i++) {
+      if (toIterate[i].getAttribute('data-section') === toMatch) {
+        // if not at root level look at data-section match
+        $(toIterate[i])
+          .addClass('current--section')
+          .attr('aria-current', 'true');
+        $(toIterate[i]).append('<span class="current--srtext">Current ' + spanText + '</span>');
+      }
+    }
+  } else {
+    // if setting current page
+    var beforeHTM = window.location.href.substring(
+      window.location.href.lastIndexOf('/') + 1,
+      window.location.href.lastIndexOf('.')
+    ); // get all between last / and .htm
+    var pageName = beforeHTM.toLowerCase().replace(/[\s-]+/g, ''); // set it to lowercase and remove any spaces and dashes
+    var currentSectionLinks = $('.current--section')
+      .next()
+      .find('a');
+    for (var i = 0; i < currentSectionLinks.length; i++) {
+      var currentSectionHREFS = currentSectionLinks[i].getAttribute('href');
+      var y = currentSectionHREFS.substring(
+        currentSectionHREFS.lastIndexOf('/') + 1,
+        currentSectionHREFS.lastIndexOf('.')
+      ); // and strip it to everything between last slash and .htm
+      var linkNames = y.toLowerCase().replace(/[\s-]+/g, ''); // and remove spaces and dashes
+      if (linkNames === pageName) {
+        $(currentSectionLinks[i])
+          .addClass('current--page')
+          .attr('aria-current', 'page')
+          .append('<span class="current--srtext" aria-hidden="false">Current ' + spanText + '</span>'); // set as current page/attr the aria and append the sr text
+      }
+    }
+  }
+}
+
+function initNav() {
+  var timeout;
+  $(window).resize(function() {
+    clearTimeout(timeout);
+    timeout = setTimeout(resizeDone, 200);
+  });
+
+  function browser__width(width) {
+    if (width < 768) {
+      $('.meganav__desktop, .meganav__global')
+        .addClass('hidden')
+        .attr('aria-hidden', 'true');
+      $('.meganav__mobile')
+        .removeClass('hidden')
+        .attr('aria-hidden', 'false');
+      isMobileView = true;
+    } else {
+      $('.meganav__desktop, .meganav__global')
+        .removeClass('hidden')
+        .attr('aria-hidden', 'false');
+      $('.meganav__mobile')
+        .addClass('hidden')
+        .attr('aria-hidden', 'true');
+      isMobileView = false;
+    }
+  }
+  browser__width(window.innerWidth);
+
+  function resizeDone() {
+    nav.menu__reset();
+    browser__width(window.innerWidth);
+  }
+
+  var deviceTest = false; //initiate as false, test against list of devices on page load
+  if (
+    /(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|ipad|iris|kindle|Android|Silk|lge |maemo|midp|mmp|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows (ce|phone)|xda|xiino/i.test(
+      navigator.userAgent
+    ) ||
+    /1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(
+      navigator.userAgent.substr(0, 4)
+    )
+  ) {
+    deviceTest = true;
+  }
+
+  // Event listener to clear navigation tooltip (IE work-around -
+  // autocomplete="off" fixes FF but not IE)
+  if (document.getElementById('findAdvisorByZip--navigationMenu')) {
+    var input = document.getElementById('findAdvisorByZip--navigationMenu');
+    input.value = '';
+  }
+
+// Adobe code to keep track of what zips users are inputting as
+// well as the number of hits when finding an advisor
+  function zipCodeKeyUp() {
+    var value = $(".form__input--navigationMenu").val();
+    var isValidZip = /^\d{5}(-\d{4})?$/.test(value);
+
+        if(isValidZip == true) {
+        digitalData.page.pageInfo.zipEntry=value;
+        } else {
+            digitalData.page.pageInfo.zipEntry = "";
+          }
+      _satellite.track("content:FindByZip");
+  }
+
+// Triggered when clicking on the "Go" button
+$('.global__row.global__row--two').find($('.button.button--login')).click(function() {
+    zipCodeKeyUp();
+});
+
+  /*--------------------
+  Event listner: click & keydown
+  ---------------------*/
+  var interactiveElements = document.querySelectorAll('.navItem');
+  for (var i = 0; i < interactiveElements.length; i++) {
+    interactiveElements[i].addEventListener('keydown', function(ev) {
+      nav.eventFilter(ev); // eventFilter defines what type of element (mainNav, subHeading, etc) and what key was pressed
+    });
+    interactiveElements[i].addEventListener('click', function(ev) {
+      nav.eventFilter(ev); // eventFilter defines what type of element (mainNav, subHeading, etc) and what key was pressed
+    });
+  }
+
+  document.body.addEventListener('click', function(ev) {
+    if (isMobileView) {
+      if ($('.meganav__mobile--wrap').hasClass('hidden') === false) {
+        // if menu is open
+        nav.offMenuClick(ev); // close menu on mobile off-menu click
+      }
+    }
+    if (document.querySelector("[class*='tooltip__trigger']") !== null) {
+      if ($(ev.target).hasClass('tooltip__trigger') === false) {
+        closeTooltip();
+      }
+    }
+  });
+
+  /*--------------------
+  Event listner: hover
+  ---------------------*/
+  var meganav__desktop = $('.meganav__desktop')[0];
+  var navItem__button = $('.navItem__button');
+  var meganavDelay;
+  if (document.querySelector('.meganav__desktop') !== null) {
+    meganav__desktop.addEventListener('mouseenter', function() {
+      // goal: set delay of 305ms when user hovers over meganav to avoid submenus
+      // showing immediately/unwanted
+      clearTimeout(meganavDelay); // clear the timeout delay
+      if ($(meganav__desktop).hasClass('hover') === false) {
+        // if meganav isn't currently being hovered over
+        meganavDelay = setTimeout(function() {
+          $(meganav__desktop).addClass('hover'); // then apply hover class after a 310ms delay
+        }, 305);
+      }
+    });
+    meganav__desktop.addEventListener('mouseleave', function(ev) {
+      // when leaving meganav
+      clearTimeout(meganavDelay); // clear the timeout delay
+      $(meganav__desktop).removeClass('hover'); // and remove the hover class
+      nav.mouseleave(ev.target);
+    });
+  }
+
+  if (!deviceTest) {
+    // if not on a device add hover events
+    for (var i = 0; i < navItem__button.length; i++) {
+      // navItem__button button hover
+      navItem__button[i].addEventListener('mouseenter', function(ev) {
+        // touch screen devices register 1st touch as mouseenter, subsequent touches as
+        // clicks
+        if (!isMobileView) {
+          nav.mouseenter(ev.target);
+        }
+      });
+      navItem__button[i].addEventListener('onmouseout', function(ev) {
+        nav.mouseleave(ev.target);
+      });
+    }
+  }
+
+  /*---------------------
+  Nav object & methods
+  ----------------------*/
+  var nav = {
+    eventFilter: function(ev) {
+      var element = ev.target;
+      var classList = element.classList;
+      var key = ev.which; // using which instead of keyCode because button keydown registers as click (ev.which = 1) and not as keyCode in FF
+      var level;
+      if ((classList.length < 2 && classList.contains('navItem')) || classList.contains('current--page')) {
+        level = 'navItem';
+      } else if (classList.contains('navItem__button')) {
+        level = 'navItem__button';
+      }
+      switch (key) {
+        case 1: // click
+          if (isMobileView) {
+            if (key === 1) {
+              nav.click__mobile(element);
+            }
+          } else {
+            nav.toggle__submenu(element);
+          }
+          break;
+        case 9: // tab
+          if (!isMobileView) {
+            nav.keyboard__tab(ev, element);
+          }
+          break;
+        case 27: // escape
+          nav.keydown__escape(element);
+          break;
+        case 37: // left arrow,
+        case 39: // right arrow,
+          if (!isMobileView) {
+            // if on the desktop menu
+            ev.preventDefault();
+            nav.keyboard__leftRight(ev, element, level, key);
+          }
+          break;
+        case 38: // up
+          ev.preventDefault();
+          nav.keyboard__up(element, level);
+          break;
+        case 40: // down
+          ev.preventDefault();
+          nav.keyboard__down(element, level);
+          break;
+      }
+    },
+    offMenuClick: function(ev) {
+      if (ev.target.offsetParent.classList.contains('meganav__mobile--wrap') === false) {
+        // if not clicking within the menu
+        if (ev.target.classList.contains('navItem__button--mobileMenuButton') === false) {
+          nav.toggle__mobileMenuButton($('.navItem__button--mobileMenuButton'));
+        }
+      }
+    },
+    menu__reset: function() {
+      $('.meganav__text--alignLeft')
+        .parent()
+        .removeClass('hidden'); // unhide left aligned items (find advisor/open account)
+      $('.navItem__button')
+        .removeClass('navItem__button--expanded red gray hover--gray')
+        .attr('aria-expanded', 'false'); // "unexpand" and reset attr's on all navItem__buttons
+      $('.navItem__button')
+        .next()
+        .addClass('hidden')
+        .attr('aria-hidden', 'true'); // hide submenus and reset all attrs of all navItem__buttons
+      $('.navItem__button--main')
+        .removeClass('hidden')
+        .next()
+        .children()
+        .removeClass('hidden'); // unhide all of the main nav item buttons and their children
+      nav.arrow__swap();
+      nav.toggle__mainMenu();
+    },
+    click__mobile: function(element) {
+      if ($(element).hasClass('navItem__button--mobileMenuButton')) {
+        nav.toggle__mobileMenuButton(element);
+      } else if ($(element).hasClass('navItem__button--mainMenu')) {
+        // if clicking on "Main Menu"
+        nav.menu__reset();
+        $('.navItem__button--mobileMenuButton').focus();
+      } else {
+        // if clicking on button other than "Main Menu"
+        if ($(element).hasClass('navItem__button--main')) {
+          // if on a main nav item
+          if ($(element).hasClass('navItem__button--expanded')) {
+            // if the main nav item is currently expanded
+            if (
+              $(element)
+                .next()
+                .find('.navItem__button--submenu')
+                .hasClass('navItem__button--expanded')
+            ) {
+              // if a submenu within the main nav item is expanded
+              $(element)
+                .next()
+                .children()
+                .removeClass('hidden');
+              nav.toggle__submenu(
+                $(element)
+                  .next()
+                  .find('.navItem__button--submenu')
+              );
+              nav.toggle__aria(
+                $(element)
+                  .next()
+                  .find('.navItem__button--submenu')
+              );
+            } else {
+              // if no submenus within the main nav item are expanded
+              nav.menu__reset(); // reset
+            }
+          } else {
+            // if the main nav item is currently collapsed/hidden
+            $('.meganav__text--alignLeft')
+              .parent()
+              .addClass('hidden'); // hide left aligned items (find advisor/open account)
+            $('.navItem__button--main')
+              .not($(element))
+              .addClass('hidden'); // hide all other main nav items and left aligned items (find advisor/open account)
+            nav.toggle__submenu(element);
+            nav.toggle__aria(element);
+          }
+        } else if ($(element).hasClass('navItem__button--submenu')) {
+          $(element)
+            .closest('.submenu__level--1')
+            .children()
+            .not($(element).parent())
+            .toggleClass('hidden');
+          if ($(element).hasClass('navItem__button--expanded')) {
+            $(element)
+              .removeClass('navItem__button--expanded')
+              .next()
+              .addClass('hidden');
+          } else {
+            $(element)
+              .addClass('navItem__button--expanded')
+              .next()
+              .removeClass('hidden');
+          }
+          nav.toggle__aria(element);
+        }
+      }
+      nav.toggle__mainMenu();
+      nav.toggle__activeColor(element);
+      nav.arrow__swap(element);
+    },
+    toggle__aria: function(element) {
+      if ($(element).hasClass('navItem__button--expanded')) {
+        $(element)
+          .attr('aria-expanded', 'true')
+          .next()
+          .attr('aria-hidden', 'false');
+      } else {
+        $(element)
+          .attr('aria-expanded', 'false')
+          .next()
+          .attr('aria-hidden', 'true');
+      }
+    },
+    toggle__submenu: function(element) {
+      if ($('.navItem__button').hasClass('navItem__button--expanded')) {
+        // if any menus are expanded
+        if ($(element).hasClass('navItem__button--expanded')) {
+          // if current menu is expanded)
+          $(element)
+            .removeClass('navItem__button--expanded hover--gray')
+            .next()
+            .addClass('hidden');
+        } else {
+          // if the current menu is NOT the expanded button
+          $('.navItem__button')
+            .removeClass('navItem__button--expanded hover--gray')
+            .next()
+            .addClass('hidden'); // close all menus
+          $(element)
+            .addClass('navItem__button--expanded hover--gray')
+            .next()
+            .removeClass('hidden'); // open this one
+        }
+      } else {
+        // if no menus are expanded check if .navItem__button: avoid applying these
+        // classes to global nav
+        if ($(element).hasClass('navItem__button')) {
+          $(element)
+            .addClass('navItem__button--expanded hover--gray')
+            .next()
+            .removeClass('hidden'); // open this one
+        }
+      }
+      if ($(element).hasClass('navItem__button')) {
+        nav.toggle__aria(element);
+        nav.arrow__swap(element);
+      }
+    },
+    toggle__mobileMenuButton: function(element) {
+      nav.menu__reset(); // reset the menu attributes/arrows
+      if (
+        $(element)
+          .next()
+          .hasClass('hidden')
+      ) {
+        $(element)
+          .attr('aria-expanded', 'true')
+          .next()
+          .removeClass('hidden')
+          .attr('aria-hidden', 'false');
+        setTimeout(function() {
+          $(element)
+            .next()
+            .removeClass('offScreen--right'); // toggle offscreen
+        }, 100);
+      } else {
+        $(element)
+          .attr('aria-expanded', 'false')
+          .next()
+          .addClass('offScreen--right')
+          .attr('aria-hidden', 'true'); // toggle offscreen
+        setTimeout(function() {
+          $(element)
+            .next()
+            .addClass('hidden');
+        }, 300);
+      }
+    },
+    toggle__mainMenu: function() {
+      if ($('.navItem__button--expanded').length > 0) {
+        // if any main nav item button is expanded
+        $('.mainMenu').removeClass('hidden');
+      } else {
+        $('.mainMenu').addClass('hidden');
+      }
+    },
+    toggle__activeColor: function(element) {
+      $('.navItem__button').removeClass('gray red'); // remove red and gray from all navItem__button
+      $('.navItem__button--expanded')
+        .addClass('red')
+        .last()
+        .addClass('gray'); // add red to expanded buttons|add gray to last expanded (gray is below red in css so will over-ride red)
+    },
+    arrow__swap: function(element) {
+      $('.navItem__button')
+        .not('.navItem__button--expanded')
+        .children()
+        .attr('src', '/images2/mvp/arrow.svg')
+        .removeClass('meganav__arrow--rotate'); // remove rotate/reset src for all arrows
+      if (!isMobileView) {
+        // if in desktop
+        $('.navItem__button--expanded')
+          .children()
+          .addClass('meganav__arrow--rotate'); // change source to white arrow/arrow up
+      } else {
+        // if in mobile
+        $('.navItem__button--expanded')
+          .children()
+          .attr('src', '/images2/mvp/arrowUp.png')
+          .addClass('meganav__arrow--rotate'); // change source to white arrow/arrow up
+      }
+    },
+    keydown__escape: function(element) {
+      nav.menu__reset();
+      if (isMobileView) {
+        $('.navItem__button--mobileMenuButton').focus();
+        $('.meganav__mobile--wrap').addClass('offScreen--right');
+      } else {
+        $(element)
+          .closest('.submenu__level--1')
+          .prev()
+          .focus();
+      }
+    },
+    keyboard__tab: function(ev, element) {
+      if (!ev.shiftKey) {
+        // if not pressing shift key
+        if (
+          $(element)
+            .parent()
+            .next().length === 0
+        ) {
+          // if there is no next menu item
+          if ($(element).next().length === 0) {
+            // if there is no nested submenu
+            if (
+              $(element)
+                .closest('.submenu__col')
+                .next().length === 0 ||
+              $(element)
+                .closest('.submenu__col')
+                .next()
+                .hasClass('submenu__bottomImage')
+            ) {
+              // if there is no next column
+              $('.navItem__button').removeClass('hover--gray');
+              nav.toggle__submenu(
+                $(element)
+                  .closest('.submenu__level--1')
+                  .prev()
+              ); // toggle all menus closed
+            }
+          }
+        }
+      } else {
+        // if pressing shift key
+        if ($(element).hasClass('navItem__button--expanded')) {
+          // if on the main nav item and it is expanded and pressing shift + tab
+          $('.navItem__button').removeClass('hover--gray');
+          nav.toggle__submenu(element); // close the open submenu
+        }
+      }
+    },
+    keyboard__up: function(element, level) {
+      if (
+        $(element)
+          .parent()
+          .prev().length > 0
+      ) {
+        // if there is a previous element
+        if ($(element).hasClass('navItem__button--main')) {
+          // if currently on a main nav item
+          if ($('.mainMenu').hasClass('hidden') === false) {
+            // if "Main Menu" is visible
+            $('.navItem__button--mainMenu').focus(); // focus on "Main Menu"
+          } else {
+            // if on a main nav item and "Main Menu" is NOT visible
+            if (
+              $(element)
+                .parent()
+                .prev()
+                .hasClass('mainMenu')
+            ) {
+              // if the previous item IS main menu and "Main Menu" is not visible
+              $(element)
+                .parent()
+                .prev()
+                .prev()
+                .children()[0]
+                .focus(); // focus on the item previous to "Main Menu"
+            } else {
+              if (isMobileView) {
+                // if on the mobile menu
+                $(element)
+                  .parent()
+                  .prev()
+                  .children()[0]
+                  .focus();
+              }
+            }
+          }
+        } else {
+          // if not currently on a main nav item
+          if ($(element).hasClass('navItem__button--mainMenu')) {
+            // if on "Main Menu"
+            $('.navItem__button--mobileMenuButton').focus(); // focus on the Menu button
+          } else {
+            if (
+              $(element)
+                .parent()
+                .prev()
+                .hasClass('hidden') === false
+            ) {
+              // if previous item is not hidden
+              if (
+                $(element)
+                  .parent()
+                  .prev()
+                  .hasClass('spacerBar__nav--topSpace') ||
+                $(element)
+                  .parent()
+                  .prev()
+                  .hasClass('navItem__noLink')
+              ) {
+                // if previous item is a spacerBar or noLink
+                if (!isMobileView) {
+                  // if desktop
+                  $(element)
+                    .closest('.submenu__col')
+                    .prev()
+                    .find('.navItem')
+                    .last()
+                    .focus(); // focus on the last nav item of the previous column
+                } else {
+                  // if mobile
+                  $(element)
+                    .parent()
+                    .prev()
+                    .prev()
+                    .children()[0]
+                    .focus();
+                }
+              } else {
+                $(element)
+                  .parent()
+                  .prev()
+                  .children()[0]
+                  .focus(); // CREATE CONDITION FOR DOING THIS AS LONG AS ELEMENT ISNT A MAIN NAV ITEM IN DESKTOP TO AVOID PRESSING UP TO CLOSE MENU AND MOVE TO PREV ITEM
+              }
+            } else {
+              // if previous item is hidden then on a submenu button that is expanded
+              $(element)
+                .closest('.submenu__level--1')
+                .prev()
+                .focus(); // focus on main nav item
+            }
+          }
+        }
+      } else {
+        // if no previous element
+        if (
+          $(element)
+            .parent()
+            .parent()
+            .hasClass('meganav__mobile--wrap')
+        ) {
+          $('.navItem__button--mobileMenuButton').focus();
+        } else if (
+          $(element)
+            .parent()
+            .parent()
+            .hasClass('submenu')
+        ) {
+          // if at first item within submenu
+          $(element)
+            .closest('.submenu')
+            .prev()
+            .focus(); // focus on the closest subheading|main nav item
+        } else if ($(element).hasClass('subheading')) {
+          // else if on the subheading
+          if (
+            $(element)
+              .parent()
+              .parent()
+              .prev().length > 0
+          ) {
+            // if there is a previous column
+            $(element)
+              .closest('.submenu__col')
+              .prev()
+              .find('.navItem')
+              .last()
+              .focus(); // focus on the last nav item of the previous column
+          } else {
+            // if there is no previous column
+            $(element)
+              .closest('.submenu__level--1')
+              .prev()
+              .focus(); // focus on the main nav item
+          }
+        }
+      }
+    },
+    keyboard__down: function(element, level) {
+      if ($(element).hasClass('navItem__button--mobileMenuButton')) {
+        // if pressing down on the mobile menu button
+        if ($('.mainMenu').hasClass('hidden')) {
+          // if "Main Menu" is hidden
+          $(element)
+            .next()
+            .find('.navItem')[0]
+            .focus(); // focus on first nav item
+        } else {
+          // if "Main Menu" is visible
+          $('.navItem__button--mainMenu').focus(); // focus on main menu
+        }
+      } else {
+        // if not pressing down on mobile menu button
+        if ($(element).next().length > 0) {
+          // if there is a nested submenu
+          if (!isMobileView) {
+            // if on desktop
+            $(element)
+              .next()
+              .find('.navItem')[0]
+              .focus(); // drop into it and focus on the first navItem
+          } else {
+            // if on mobile menu
+            if ($(element).hasClass('navItem__button--expanded')) {
+              // if current element is expanded
+              $(element)
+                .next()
+                .children()
+                .not('.hidden')
+                .find('.navItem')[0]
+                .focus(); // find the first NOT HIDDEN menu item and focus on it
+            } else {
+              // if the current element is not expanded
+              if (
+                $(element)
+                  .parent()
+                  .next()
+                  .not('.hidden')
+                  .find('.navItem__button').length > 0
+              ) {
+                // if there is a next submenu button
+                $(element)
+                  .parent()
+                  .next()
+                  .not('.hidden')
+                  .find('.navItem__button')[0]
+                  .focus(); // focus on it
+              } else {
+                // if there is not a next submenu button
+                if (
+                  $(element)
+                    .parent()
+                    .next()
+                    .hasClass('submenu__bottomImage') === false
+                ) {
+                  $(element)
+                    .parent()
+                    .next()
+                    .not('.hidden')
+                    .find('.navItem')[0]
+                    .focus(); // focus on the next navItem
+                }
+              }
+            }
+          }
+        } else {
+          // if there is not a nested submenu
+          if (
+            $(element)
+              .parent()
+              .next().length > 0
+          ) {
+            // if there is a next item
+            if ($(element).hasClass('navItem__button--mainMenu')) {
+              // if on "Main Menu"
+              $('.navItem__button--expanded')
+                .first()
+                .focus(); // find first expanded button and focus on it
+            } else {
+              $(element)
+                .parent()
+                .nextAll()
+                .not('.hidden')
+                .find('.navItem')[0]
+                .focus(); // look over all the next siblings and focus on the first not hidden navItem
+            }
+          } else {
+            // if there is not a next item
+            if (!isMobileView) {
+              // if in the desktop menu
+              if (
+                $(element)
+                  .closest('.submenu__col')
+                  .next().length > 0
+              ) {
+                // if there is a next column level element in line
+                if (
+                  $(element)
+                    .closest('.submenu__col')
+                    .next()
+                    .hasClass('submenu__bottomImage') === false
+                ) {
+                  $(element)
+                    .closest('.submenu__col')
+                    .next()
+                    .find('.navItem')[0]
+                    .focus(); // focus on the first nav item of the next column
+                } else if (
+                  $(element)
+                    .closest('.submenu__col')
+                    .next()
+                    .hasClass('submenu__bottomImage')
+                ) {
+                  // else if it IS the submenu__bottomImage
+                  if (
+                    $(element)
+                      .closest('.submenu__level--1')
+                      .prev()
+                      .parent()
+                      .next().length !== 0
+                  ) {
+                    // if there is a next main nav button item in line
+                    $('.navItem__button').removeClass('hover--gray');
+                    $(element)
+                      .closest('.submenu__level--1')
+                      .prev()
+                      .parent()
+                      .next()
+                      .children()[0]
+                      .focus(); // focus on next menu item
+                    nav.toggle__submenu(
+                      $(element)
+                        .closest('.submenu__level--1')
+                        .prev()
+                    ); // toggle all menus closed
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    keyboard__leftRight: function(ev, element, level, key) {
+      if (level !== 'navItem__button') {
+        // if not on a main nav item
+        element = $(element)
+          .closest('.submenu__level--1')
+          .prev(); // then set element equal to the nearest main nav item
+      }
+      if ($(element).hasClass('navItem__button--expanded')) {
+        // if the submenu is open
+        nav.toggle__submenu(element); // close the submenu
+      }
+      if (key === 39) {
+        // if right arrow (or down: see keyboard__down() for reference)
+        if (
+          $(element)
+            .parent()
+            .next().length > 0
+        ) {
+          // if there is a next main nav item
+          $(element)
+            .parent()
+            .next()
+            .children()[0]
+            .focus(); // focus on it
+        } else {
+          // if there is no next item
+          $(element).focus(); // focus on the current main nav element
+        }
+      } else if (key === 37) {
+        // if left arrow
+        if (
+          $(element)
+            .parent()
+            .prev().length > 0
+        ) {
+          // if there is a prev main nav item
+          $(element)
+            .parent()
+            .prev()
+            .children()[0]
+            .focus(); // focus on it
+        } else {
+          // if there is no prev item
+          $(element).focus(); // focus on the current main nav element
+        }
+      }
+      nav.toggle__submenu();
+    },
+    leaveTimeout: '',
+    mouseenter: function(element) {
+      clearTimeout(nav.leaveTimeout); // hide all other submenus when entering target submenu
+      if ($('.meganav__desktop').hasClass('hover')) {
+        // if currently hovering in meganav
+        nav.toggle__submenu(element);
+      } else {
+        // if not currently hovering in meganav
+        nav.mainNavDelay = setTimeout(function() {
+          // then set a 300ms delay before opening submenu.
+          nav.toggle__submenu(element);
+        }, 500);
+      }
+    },
+    mouseleave: function(element) {
+      clearTimeout(nav.mainNavDelay);
+      nav.leaveTimeout = setTimeout(function() {
+        nav.toggle__submenu();
+      }, 300);
+      $('.navItem__button--main')
+        .children()
+        .removeClass('meganav__arrow--rotate');
+    }
+  };
+}
+function setVectorCookie(name) {
+  // define vectorLetter as A or B
+  var vectorLetter = Math.round(Math.random());
+  switch (vectorLetter) {
+    case 0:
+      vectorLetter = 'A';
+      break;
+    case 1:
+      vectorLetter = 'B';
+      break;
+  }
+  // create new date object and expiration for cookie
+  var date = new Date();
+  date.setTime(date.getTime() + 30 * 24 * 60 * 60 * 1000); //The first number sets the number of days this cookie will run based on the day it is set.
+  var expires = date.toGMTString(); // set expiration
+  setCookie(name, vectorLetter, '', expires, '/', '.wellsfargoadvisors.com');
+}
+
+// Vector swap for clients
+function vectorSwap(vector) {
+  digitalData.page.HPVersion = 'Customer Version ' + vector; //Sets the page name based on whether it's an A or B test.
+  var data = {
+    A: {
+      title: '',
+      blocks: [
+        {
+          img: 'yes',
+          imgFull: 'no',
+          imgPos: 1,
+          imgSrc: '/images2/mvp/home/icon-target.svg',
+          title: 'Our Envision® Planning Process',
+          inner: 'yes',
+          blurb:
+            'Our investment planning process helps you and your Financial Advisor plan your p' +
+            'ortfolio around your <nobr>real-life</nobr> goals, dreams, and needs.',
+          button: 'Our Envision Plan',
+          buttonLink: '/services/financial-advisor/financial-plan/envision.htm?intcid=WFA1600035607'
+        },
+        {
+          img: 'yes',
+          imgFull: 'no',
+          imgPos: 1,
+          imgSrc: '/images2/mvp/home/icon-people.svg',
+          title: 'Get Help With Your Lending Needs',
+          inner: 'no',
+          blurb:
+            'Get more than investment advice from Wells Fargo Advisors. Access products and s' +
+            'ervices through our affiliates to help you manage your lending needs, too.',
+          button: 'Lending Services',
+          buttonLink: '/why-wells-fargo/products-services/lending.htm?intcid=WFA1600035608'
+        }
+      ]
+    },
+    B: {
+      title: '',
+      blocks: [
+        {
+          img: '',
+          imgFull: 'no',
+          imgPos: 1,
+          imgSrc: '',
+          title: '',
+          inner: 'yes',
+          blurb:
+            'Our investment planning process helps you and your Financial Advisor plan your p' +
+            'ortfolio around your <nobr>real-life</nobr> goals, dreams, and needs.',
+          button: 'Our Envision® Planning Process',
+          buttonLink: '/services/financial-advisor/financial-plan/envision.htm?intcid=WFA1700032880'
+        },
+        {
+          img: '',
+          imgFull: 'no',
+          imgPos: 1,
+          imgSrc: '',
+          title: '',
+          inner: 'no',
+          blurb:
+            'Get more than investment advice from Wells Fargo Advisors. Access products and s' +
+            'ervices through our affiliates to help you manage your lending needs, too.',
+          button: 'Get Help With Your Lending Needs',
+          buttonLink: '/why-wells-fargo/products-services/lending.htm?intcid=WFA1700032881'
+        }
+      ]
+    }
+  };
+  var vectors = document.getElementsByClassName('vectorBlock');
+  var title = vectors[0].previousElementSibling; // Select the h2 before the vectors.
+  var parent = title.parentNode;
+
+  parent.removeChild(vectors[1]); //remove the last one first, otherwise there would be an error.
+  parent.removeChild(vectors[0]);
+  var vectorContainer = document.createElement('div'); //Creates the container for the vectors
+  vectorContainer.classList.add('subWrapper--customVector');
+  vectorContainer.classList.add('vector' + vector);
+  if (vectorContainer.classList.contains('vectorA')) {
+    // only center text if vector A
+    vectorContainer.classList.add('u-centerText');
+  }
+  parent.insertBefore(vectorContainer, title.nextElementSibling);
+  for (i = 0; i < data[vector].blocks.length; i++) {
+    //Write each block individually
+    writeBlocks(vector, i);
+  }
+
+  function writeBlocks(vecVersion, num) {
+    var block = document.createElement('div'); //Creates the container for each block
+    if (data[vecVersion].blocks[i]['imgFull'] == 'no') {
+      //If the block isn't a single image
+      if (vecVersion === 'A') {
+        var head = document.createElement('h3');
+        head.textContent = data[vecVersion].blocks[i]['title']; //Set the title text
+        head.classList.add('h', 'h--promoHeading', 'u-marginTop');
+        head.setAttribute('style', 'margin-bottom: 0;');
+        block.appendChild(head);
+        if (document.querySelector('.pageMain__topHeading')) {
+          document.querySelector('.pageMain__topHeading').classList.add('h-clientVectorA');
+          document.querySelector('.vectorContainer').classList.add('homePage__vectorContainer');
+        }
+      }
+      var blurb = document.createElement('p'); //Main copy
+      if (data[vecVersion].blocks[i]['inner'] == 'yes') {
+        //Checks for html tags. This needs to be expanded with better checks
+        blurb.innerHTML = data[vecVersion].blocks[i]['blurb'];
+      } else {
+        blurb.textContent = data[vecVersion].blocks[i]['blurb'];
+      }
+      if (vecVersion === 'A') {
+        block.classList.add('main__promoBox--flex');
+        var wrapper = document.createElement('section');
+        wrapper.classList.add('promoBox__textBlock');
+        wrapper.appendChild(blurb);
+        block.appendChild(wrapper);
+      }
+
+      var link = document.createElement('a');
+      link.classList.add('h--boldHeading');
+      var arrow = document.createElement('span');
+      arrow.appendChild(document.createTextNode('\u00a0' + String.fromCharCode(10095))); //Code for the arrows
+      arrow.setAttribute('aria-hidden', 'true');
+      link.appendChild(document.createTextNode(data[vecVersion].blocks[i]['button']));
+      link.appendChild(arrow);
+      link.setAttribute('href', data[vecVersion].blocks[i]['buttonLink']);
+      if (vecVersion === 'B') {
+        block.appendChild(blurb);
+        block.insertBefore(link, block.firstElementChild);
+        block.classList.add('subWrapper__tile', 'subWrapper__tile--nav');
+      } else {
+        block.appendChild(link);
+      }
+      if (data[vecVersion].blocks[i]['img'] == 'yes') {
+        //Checks for an image. If so, sets it at correct position.
+        var img = document.createElement('img');
+        img.setAttribute('src', data[vecVersion].blocks[i]['imgSrc']);
+        img.setAttribute('alt', '');
+        img.classList.add('img--partWidthCenter');
+        block.insertBefore(img, block.children[data[vecVersion].blocks[i]['imgPos'] - 1]);
+      }
+    } else {
+      // For the full block images.
+      var img = document.createElement('img');
+      img.setAttribute('src', data[vecVersion].blocks[i]['imgSrc']);
+      img.setAttribute('alt', '');
+      block.classList.add('imageBlock');
+      // classSwap.add('imageBlock', block);
+      block.appendChild(img);
+    }
+    vectorContainer.appendChild(block);
+  }
+}
+
+//**** targeted banners
+
+function bannerCookie() {
+  var fullPath = window.location.href;
+  var pathArr = fullPath.split('/');
+  var adTarget = pathArr[pathArr.length - 1];
+  if (adTarget == 'retirement-plan.htm' || adTarget == 'retirement-income-process.htm') {
+    var date = new Date();
+    var days = 30;
+    date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
+    var expires = '; expires=' + date.toGMTString();
+    adCookieString = 'adServer=true; path=/; expires=' + expires;
+    document.cookie = adCookieString;
+  }
+}
+
+function bannerTarget() {
+  var myCookie = getCookie('adServer');
+  if (myCookie != null) {
+    offerTarget();
+  }
+}
+//remove compare our services link if customer
+function linkPop() {
+  $('#prospectLink').remove();
+  var linkContainer = document.getElementsByClassName('linkContainer');
+  linkContainer[0].setAttribute('style', 'padding-top: .75em; background: white; text-align: center');
+}
+
+$(function() {
+  // $
+  //   .getJSON('carouselDate.json', function (result) {
+  //     $
+  //       .each(result, function (i, field) {
+  //         $('div').append(field + ' ');
+  //         console.log('success');
+  //       });
+  //   });
+
+
+  // if on the intuitive investor sign on page
+  if (window.location.href.indexOf('intuitive-investor/sign-on') !== -1) {
+    var date = new Date();
+    var offset = -5;
+
+    getEasternTime();
+
+    function getEasternTime() {
+      var localTime = date.getTime();
+      var localOffset = date.getTimezoneOffset() * 60000;
+      var utc = localTime + localOffset; // get current UTC time
+
+      // EST UTC offset is UTC-5h
+      daylightSavingsCheck();
+      var est = utc + 3600000 * offset;
+      var easternDate = new Date(est);
+
+      var easternHour = easternDate.getHours();
+      var easternMinutes = easternDate.getMinutes();
+      var time = easternHour + '.' + easternMinutes;
+      return parseFloat(time);
+    }
+
+    function daylightSavingsCheck() {
+      Date.prototype.stdTimezoneOffset = function() {
+        var jan = new Date(this.getFullYear(), 0, 1);
+        var jul = new Date(this.getFullYear(), 6, 1);
+        return Math.max(jan.getTimezoneOffset(), jul.getTimezoneOffset());
+      };
+
+      Date.prototype.isDstObserved = function() {
+        return this.getTimezoneOffset() < this.stdTimezoneOffset();
+      };
+
+      if (date.isDstObserved()) {
+        offset = -4;
+      }
+      return offset;
+    }
+    function showAfterHours() {
+      $('.notAvailable').removeClass('hidden');
+      $('.availableNow, .trigger__toggleHours').addClass('hidden');
+    }
+
+    function showDuringHours() {
+      $('.notAvailable').addClass('hidden');
+      $('.availableNow, .trigger__toggleHours').removeClass('hidden');
+    }
+
+    var today = parseInt(date.getDay());
+    var easternTime = getEasternTime();
+
+    if (today > 0 && today < 6) {
+      if (easternTime >= 8 && easternTime < 21.3) {
+        showDuringHours();
+      } else {
+        showAfterHours();
+      }
+    } else if (today === 6) {
+      // if saturday and 10:30am-7pm EST
+      if (easternTime >= 10.3 && easternTime < 19) {
+        showDuringHours();
+      }
+    } else {
+      // if sunday or after hours
+      showAfterHours();
+    }
+
+    // click event for show/hide full hours toggle button
+    if (document.querySelector('.trigger__toggleHours') !== null) {
+      document.querySelector('.trigger__toggleHours').addEventListener('click', function(ev) {
+        accordion(ev.target);
+        if (this.textContent === 'Show full hours') {
+          this.textContent = 'Hide full hours';
+        } else {
+          this.textContent = 'Show full hours';
+        }
+      });
+    }
+  }
+
+
+  // if (document.querySelector('.loginPage') !== null) {
+  //   var vectorSwapBlock = document.createElement('div');
+  //   vectorSwapBlock.setAttribute('class', 'vectorBlock');
+  //   vectorSwapBlockTwo = vectorSwapBlock.cloneNode(true);
+  //   var pageMain = document.getElementsByClassName('page__main');
+  //   var signOnWrap = document.getElementsByClassName('signOn__wrap');
+  //   signOnWrap[0].classList.add('u-marginBottom');
+  //   pageMain[0].appendChild(vectorSwapBlock);
+  //   pageMain[0].appendChild(vectorSwapBlockTwo);
+  // }
+
+  if (document.getElementById('prospectLink') && getCookie('CLIENTLOGINCookie') === 'customer') {
+    linkPop();
+  }
+
+  if (
+    document.getElementsByClassName('vectorBlock').length > 0 &&
+    getCookie('CLIENTLOGINCookie') === 'customer' &&
+    window.location.href.indexOf('online-access/signon') != -1
+  ) {
+    var vectorCookie;
+    if (getCookie('vector') === null) {
+      setVectorCookie('vector');
+    }
+    vectorCookie = getCookie('vector');
+    vectorSwap(vectorCookie);
+  } else if (
+    document.getElementsByClassName('vectorBlock').length > 0 &&
+    getCookie('CLIENTLOGINCookie') === 'customer'
+  ) {
+    vectorSwap('A');
+  } else if (document.getElementsByClassName('vectorBlock').length > 0 && getCookie('CLIENTLOGINCookie') === null) {
+    //Conditional statement so CSS change to vectorBlock will not affect the homepage.
+    if (!$('#slider1')[0]) {
+      $('.vectorBlock').css('padding', '0 1.5em');
+    }
+  }
+  // document.addEventListener('DOMContentLoad', function(e){
+  if ($('.meganav__mobile').length > 0 || $('.meganav__global').length > 0) {
+    // if meganav exists on the page
+    initNav();
+    setActive__paths();
+  }
+
+  if (document.querySelector('h1') !== null) {
+    document.querySelector('h1').id = 'heading';
+  }
+
+  if (document.querySelector('.showOnFocus') !== null) {
+    if (document.querySelector('#j_username') !== null) {
+      document.querySelector('.showOnFocus').href = '#j_username';
+    } else {
+      document.querySelector('.showOnFocus').href = '#heading';
+    }
+  }
+
+  insertImg();
+
+  //appendSVG();
+
+  bannerCookie();
+  if (document.getElementsByClassName('offerBlock').length === 1) {
+    bannerTarget();
+  }
+
+  // var accordionTrigger = document.getElementsByClassName('accordion__button');
+  // for (var x = 0; x < accordionTrigger.length; x++) {
+  //   accordionTrigger[x].addEventListener('click', accordion, false);
+  // }
+  $('.accordion__button').on('click', accordion);
+
+  var panelTrigger = document.querySelectorAll('.panelContainer__button');
+
+  if (panelTrigger.length > 0) {
+    for (var i = 0; i < panelTrigger.length; i++) {
+      panelTrigger[i].addEventListener('click', function(e) {
+        showPanel(e.target, '.panelContainer__button.selected', '.panelContainer__panel.selected'), false;
+      });
+    }
+  }
+  //Tridion bandaids, to be removed when backend fixed
+  // if (document.querySelector('a span:not(.current--srtext):not(.openAccount__phone--mobile)') !== null) {
+  //   var linkCarets = document.querySelectorAll('a span:not(.current--srtext):not(.openAccount__phone--mobile)');
+  //   for (var i = 0; i < linkCarets.length; i++) {
+  //     linkCarets[i].setAttribute('aria-hidden', 'true');
+  //   }
+  // }
+
+  if (document.querySelector('.footer__nav li') !== null) {
+    var footerNavLinks = document.querySelectorAll('.footer__nav li');
+    for (var i = 0; i < footerNavLinks.length; i++) {
+      footerNavLinks[i].removeAttribute('role');
+    }
+  }
+
+  // if (document.querySelectorAll('[role="Button"]') !== null) {
+  //   var btns = document.querySelectorAll('[role="Button"]');
+  //   for (var i = 0; i < btns.length; i++) {
+  //     btns[i].setAttribute('role', 'button');
+  //   }
+  // }
+
+  if (document.querySelector('.social--icon') !== null) {
+    var socials = document.querySelectorAll('.social--icon');
+    for (var i = 0; i < socials.length; i++) {
+      socials[i].setAttribute('focusable', 'false');
+    }
+  }
+  // end bandaids
+
+  if (document.querySelector('.panelContainer__panel')) {
+    activeTargetPanel();
+  }
+
+  // if (document.querySelectorAll('a').length > 0) {   var exitLinks =
+  // document.querySelectorAll('[target]');   for (var i = 0; i <
+  // exitLinks.length; i++) {     exitLinks[i].addEventListener('click',
+  // function(e) {       e.preventDefault();       e.stopPropagation();
+  // modalDiv();
+  // document.getElementById('continueLink').addEventListener('keydown',
+  // function(e) {         if (e.keyCode === 9) {           e.preventDefault();
+  // $('#modalExit').focus();         }       });
+  // document.getElementById('modalExit').addEventListener('keydown', function(e)
+  // {         if (e.keyCode === 40) {           e.preventDefault();
+  // $('#modalHeader').focus();         }       });
+  // document.getElementById('modalHeader').addEventListener('keydown',
+  // function(e) {         if (e.keyCode === 40) {           e.preventDefault();
+  // $('#modalText').focus();         }       });
+  // document.getElementById('modalText').addEventListener('keydown', function(e)
+  // {         if (e.keyCode === 40) {           e.preventDefault();
+  // $('#cancelLink').focus();         }       });
+  // document.getElementById('cancelLink').addEventListener('keydown', function(e)
+  // {         if (e.keyCode === 40) {           e.preventDefault();
+  // $('#continueLink').focus();         }       });     });   } } if
+  // (document.getElementById('reloadLink')) {
+  // document.getElementById('reloadLink').addEventListener('click', clearReload,
+  // false); }
+
+  if (document.getElementById('findAdvisorByZip--navigationMenu')) {
+    var input = document.getElementById('findAdvisorByZip--navigationMenu');
+    input.value = '';
+  }
+});
+
+var resizeTimer;
+
+window.addEventListener('resize', function() {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(function() {
+    if (document.querySelectorAll('.panelContainer__panel').length > 0) {
+      if (window.matchMedia('(min-width: 37.5em)').matches) {
+        if (
+          document.querySelectorAll('.panelContainer__panel.selected').length == 0 &&
+          document.querySelectorAll('.panelContainer__panel').length > 0
+        ) {
+          activeTargetPanel();
+        }
+      } else {
+        setPanelHeight();
+      }
+      tabHeightAdjust('init');
+    }
+  }, 250);
+});
+
+/*------------------------
+Rotate Carousel Banner Start
+-------------------------*/
+//If page contains ID "slider1" (should only run on homepage)
+if ($('#slider1')[0]) {
+  function carouselCampaign() {
+    //Pulling in the date ranges from carouselDates.json
+    var carouselDate = JSON.parse(dates);
+    var startDate = carouselDate[0].start;
+    var endDate = carouselDate[1].end;
+
+    var makeStringStart = JSON.stringify(startDate);
+    var makeStringEnd = JSON.stringify(endDate);
+
+    var b = JSON.parse(makeStringStart, JSON.dateParser);
+    var e = JSON.parse(makeStringEnd, JSON.dateParser);
+
+    var beginDate = new Date(b);
+    var finishDate = new Date(e);
+
+    var date = new Date();
+    var toggleFx = function() {
+      $.fx.off = !$.fx.off;
+    };
+    toggleFx();
+
+    //Random number generator to have a number between 1-3, each one to
+    //represent which banner will get selected
+    $(document).ready(function() {
+      if (date >= beginDate && date <= finishDate) {
+        var rando = Math.floor(Math.random() * 3) + 1;
+
+        if (rando == 1) {
+          document.getElementById('slider2').click(toggleFx);
+          toggleFx();
+        } else if (rando == 2) {
+          document.getElementById('slider3').click(toggleFx);
+          toggleFx();
+        } else {
+          document.getElementById('slider1').click(toggleFx);
+          $('.slide.slide__one').css('display', 'table');
+          toggleFx();
+        }
+      } else {
+        $('.slide.slide__one').css('display', 'table');
+        document.getElementById('slider1').click(toggleFx);
+        toggleFx();
+      }
+    });
+  }
+  carouselCampaign();
+}
+
+// Tooltips
+if (document.querySelector("[class*='tooltip__trigger']") !== null) {
+  var tooltip = document.querySelectorAll("[class*='tooltip__trigger']");
+  for (var i = 0; i < tooltip.length; i++) {
+    tooltip[i].addEventListener('click', multiOpenClose);
+  }
+
+  var iconClose = document.querySelectorAll('.icon__close');
+  for (var i = 0; i < iconClose.length; i++) {
+    iconClose[i].addEventListener('click', function() {
+      closeTooltip();
+    });
+    iconClose[i].addEventListener('keydown', function(ev) {
+      if (ev.keyCode === 27) {
+        closeTooltip();
+      }
+      if (ev.shiftKey && ev.keyCode === 9) {
+        ev.preventDefault();
+        closeTooltip();
+      }
+      if (!ev.shiftKey && ev.keyCode === 9) {
+        if (this.classList.contains('tooltip__global--close') === false) {
+          ev.preventDefault();
+          closeTooltip();
+        }
+      }
+    });
+  }
+
+  if (document.querySelector('.tooltip__global--phone') !== null) {
+    var globalTooltipPhone = document.querySelector('.tooltip__global--phone');
+    globalTooltipPhone.addEventListener('keydown', function(ev) {
+      if (ev.keyCode === 9 && ev.shiftKey === false) {
+        closeTooltip();
+      }
+    });
+  }
+
+  /*
+  function elPos(t, e) {
+    var r = t.offsetLeft,
+      o = t.offsetTop,
+      l = [r, o];
+    return (
+      300 > r ? (e.style.left = 0) : (e.style.left = l[0] - e.offsetWidth / 3 + 'px'),
+      (e.style.top = l[1] + 40 + 'px'),
+      l
+    );
+  }
+  */
+
+  function elPos(t, e) {
+      var l = [t.offsetLeft, t.offsetTop];
+
+      if (l[0] < 300) {
+        e.style.left = 17 + 'px';
+      } else if (l[0] > 800) {
+        e.style.right = 17 + 'px';
+      } else {
+        e.style.left = l[0] - e.offsetWidth / 3 + 'px';
+      }
+      if (window.innerWidth < 769) {
+        e.style.top = 78 + '%';
+      } else {
+        if (l[1] < 200) {
+          e.style.top = 480 + 'px';
+        } else {
+          e.style.top = l[1] + 40 + 'px';
+        }
+      }
+  }
+
+  function multiOpenClose() {
+    closeTooltip(); // close all tooltips before opening this tooltip
+    var ariaControls = this.getAttribute('aria-controls');
+    var tooltip = document.querySelector('#' + ariaControls);
+    tooltip.classList.toggle('tooltip--visible');
+    if (this.classList.contains('tooltip__trigger--inline')) {
+     elPos(this, tooltip);
+    }
+    tooltip.querySelector('.icon__close').focus();
+    $(this).attr('aria-expanded', 'true');
+    $(tooltip).attr('aria-hidden', 'false');
+  }
+
+  function closeTooltip() {
+    var visibleTooltip = document.querySelectorAll('.tooltip--visible');
+    for (var i = 0; i < visibleTooltip.length; i++) {
+      var tooltip = visibleTooltip[i].getAttribute('aria-describedby');
+      var tooltipTrigger = document.querySelector('#' + tooltip);
+      if (tooltipTrigger !== null) {
+        // conditional: in global nav y = null on tab
+        tooltipTrigger.focus();
+      }
+      visibleTooltip[i].classList.remove('tooltip--visible');
+    }
+    $('.tooltip__trigger').attr('aria-expanded', 'false');
+    $('.tooltip').attr('aria-hidden', 'true');
+  }
+}
+
+// Back to Top behavior
+if (document.querySelector('.backToTop') !== null) {
+  var backToTop = document.querySelectorAll('.backToTop');
+  for (var i = 0; i < backToTop.length; i++) {
+    backToTop[i].addEventListener('click', function() {
+      if (document.getElementById('heading') !== null) {
+        $('#heading')
+          .attr('tabindex', '-1')
+          .focus();
+      }
+    });
+  }
+}
